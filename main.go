@@ -125,7 +125,6 @@ func PostTeacher(c *gin.Context) {
 	c.Bind(&teacher)
 	db.Create(&teacher)
 	c.JSON(201, gin.H{"success": teacher})
-	// curl -i -X POST -H "Content-Type: application/json" -d "{ \"firstname\": \"Thea\", \"lastname\": \"Queen\" }" http://localhost:8080/api/v1/users
 }
 
 func GetTeachers(c *gin.Context) {
@@ -168,7 +167,6 @@ func UpdateTeacher(c *gin.Context) {
 	}
 	db.Save(&result)
 	c.JSON(200, gin.H{"success": result})
-	// curl -i -X PUT -H "Content-Type: application/json" -d "{ \"firstname\": \"Thea\", \"lastname\": \"Merlyn\" }" http://localhost:8080/api/v1/users/1
 }
 
 func DeleteTeacher(c *gin.Context) {
@@ -183,7 +181,6 @@ func DeleteTeacher(c *gin.Context) {
 	} else {
 		c.JSON(404, gin.H{"error": "Teacher not found"})
 	}
-	// curl -i -X DELETE http://localhost:8080/api/v1/users/1
 }
 
 func PostParent(c *gin.Context) {
@@ -193,7 +190,6 @@ func PostParent(c *gin.Context) {
 	c.Bind(&parent)
 	db.Create(&parent)
 	c.JSON(201, gin.H{"success": parent})
-	// curl -i -X POST -H "Content-Type: application/json" -d "{ \"firstname\": \"Thea\", \"lastname\": \"Queen\" }" http://localhost:8080/api/v1/users
 }
 
 func GetParents(c *gin.Context) {
@@ -236,7 +232,6 @@ func UpdateParent(c *gin.Context) {
 	}
 	db.Save(&result)
 	c.JSON(200, gin.H{"success": result})
-	// curl -i -X PUT -H "Content-Type: application/json" -d "{ \"firstname\": \"Thea\", \"lastname\": \"Merlyn\" }" http://localhost:8080/api/v1/users/1
 }
 
 func DeleteParent(c *gin.Context) {
@@ -251,7 +246,6 @@ func DeleteParent(c *gin.Context) {
 	} else {
 		c.JSON(404, gin.H{"error": "Parent not found"})
 	}
-	// curl -i -X DELETE http://localhost:8080/api/v1/users/1
 }
 
 func PostSubject(c *gin.Context) {
@@ -261,7 +255,6 @@ func PostSubject(c *gin.Context) {
 	c.Bind(&subject)
 	db.Create(&subject)
 	c.JSON(201, gin.H{"success": subject})
-	// curl -i -X POST -H "Content-Type: application/json" -d "{ \"firstname\": \"Thea\", \"lastname\": \"Queen\" }" http://localhost:8080/api/v1/users
 }
 
 func GetSubjects(c *gin.Context) {
@@ -300,7 +293,6 @@ func UpdateSubject(c *gin.Context) {
 	}
 	db.Save(&result)
 	c.JSON(200, gin.H{"success": result})
-	// curl -i -X PUT -H "Content-Type: application/json" -d "{ \"firstname\": \"Thea\", \"lastname\": \"Merlyn\" }" http://localhost:8080/api/v1/users/1
 }
 
 func DeleteSubject(c *gin.Context) {
@@ -315,7 +307,6 @@ func DeleteSubject(c *gin.Context) {
 	} else {
 		c.JSON(404, gin.H{"error": "Subject not found"})
 	}
-	// curl -i -X DELETE http://localhost:8080/api/v1/users/1
 }
 
 func PostClass(c *gin.Context) {
@@ -325,7 +316,6 @@ func PostClass(c *gin.Context) {
 	c.Bind(&class)
 	db.Create(&class)
 	c.JSON(201, gin.H{"success": class})
-	// curl -i -X POST -H "Content-Type: application/json" -d "{ \"firstname\": \"Thea\", \"lastname\": \"Queen\" }" http://localhost:8080/api/v1/users
 }
 
 func GetClasses(c *gin.Context) {
@@ -364,7 +354,6 @@ func UpdateClass(c *gin.Context) {
 	}
 	db.Save(&result)
 	c.JSON(200, gin.H{"success": result})
-	// curl -i -X PUT -H "Content-Type: application/json" -d "{ \"firstname\": \"Thea\", \"lastname\": \"Merlyn\" }" http://localhost:8080/api/v1/users/1
 }
 
 func DeleteClass(c *gin.Context) {
@@ -379,7 +368,6 @@ func DeleteClass(c *gin.Context) {
 	} else {
 		c.JSON(404, gin.H{"error": "Class not found"})
 	}
-	// curl -i -X DELETE http://localhost:8080/api/v1/users/1
 }
 
 func OptionsUser(c *gin.Context) {
@@ -387,3 +375,6 @@ func OptionsUser(c *gin.Context) {
 	c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	c.Next()
 }
+
+//$params = '{"firstname": "Bachar", "lastname": "Senno", "email": "abc@def.com", "username": "username", "password": "password", "phonenumber": "123456789"}'
+//Invoke-RestMethod -URI http://localhost:8080/api/v1/teacher/1 -Method "PUT" -Body $params -ContentType 'application/json'

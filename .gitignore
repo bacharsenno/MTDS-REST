@@ -37,6 +37,6 @@ debug
 .Trashes
 ehthumbs.db
 Thumbs.db
-.idea
-.vscode
+.idea/
+.vscode/
 data.db
