@@ -2,41 +2,139 @@ package model
 
 import "github.com/jinzhu/gorm"
 
-type Login struct {
-	Username string
-	Password string
+type User struct {
+	Username string `gorm:"not null, PRIMARY_KEY" form:"Username" json:"Username"`
+	Password string `gorm:"not null" form:"Password" json:"Password"`
+	Type     int    `gorm:"not null" form:"Type" json:"Type"`
 }
 
 type Teacher struct {
-	ID          int    `gorm:"PRIMARY_KEY, AUTOINCREMENT" form:"ID" json:"ID"`
-	Firstname   string `gorm:"not null" form:"firstname" json:"firstname"`
-	Lastname    string `gorm:"not null" form:"lastname" json:"lastname"`
-	Email       string `gorm:"not null" form:"email" json:"email"`
-	Username    string `gorm:"not null" form:"username" json:"username"`
-	Password    string `gorm:"not null" form:"password" json:"password"`
-	PhoneNumber string `gorm:"not null" form:"phonenumber" json:"phonenumber"`
+	Username         string `gorm:"not null, PRIMARY_KEY" form:"Username" json:"Username"`
+	FirstName        string `gorm:"not null" form:"FirstName" json:"FirstName"`
+	LastName         string `gorm:"not null" form:"LastName" json:"LastName"`
+	Email            string `gorm:"not null" form:"Email" json:"Email"`
+	PhoneNumber      string `gorm:"not null" form:"PhoneNumber" json:"PhoneNumber"`
+	DateOfBirth      string `form:"DateOfBirth" json:"DateOfBirth"`
+	PlaceOfBirth     string `form:"PlaceOfBirth" json:"PlaceOfBirth"`
+	Nationality      string `form:"Nationality" json:"Nationality"`
+	Address          string `form:"Address" json:"Address"`
+	FiscalCode       string `form:"FiscalCode" json:"FiscalCode"`
+	GradDegree       string `form:"GradDegree" json:"GradDegree"`
+	GradFieldOfStudy string `form:"GradFieldOfStudy" json:"GradFieldOfStudy"`
+	GradGrade        string `form:"GradGrade" json:"GradGrade"`
+	GradSchool       string `form:"GradSchool" json:"GradSchool"`
+	SeniorityLevel   string `form:"SeniorityLevel" json:"SeniorityLevel"`
+	StartDate        string `form:"StartDate" json:"StartDate"`
+	EndDate          string `form:"EndDate" json:"EndDate"`
+	Status           string `form:"Status" json:"Status"`
 }
 
 type Parent struct {
-	ID          int    `gorm:"PRIMARY_KEY, AUTO_INCREMENT" form:"ID" json:"ID"`
-	Firstname   string `gorm:"not null" form:"firstname" json:"firstname"`
-	Lastname    string `gorm:"not null" form:"lastname" json:"lastname"`
-	Email       string `gorm:"not null" form:"email" json:"email"`
-	Username    string `gorm:"not null" form:"username" json:"username"`
-	Password    string `gorm:"not null" form:"password" json:"password"`
-	PhoneNumber string `gorm:"not null" form:"phonenumber" json:"phonenumber"`
+	Username    string `gorm:"not null, PRIMARY_KEY" form:"Username" json:"Username"`
+	FirstName   string `gorm:"not null" form:"FirstName" json:"FirstName"`
+	LastName    string `gorm:"not null" form:"LastName" json:"LastName"`
+	Email       string `gorm:"not null" form:"Email" json:"Email"`
+	PhoneNumber string `gorm:"not null" form:"PhoneNumber" json:"PhoneNumber"`
+	Nationality string `form:"Nationality" json:"Nationality"`
+	Address     string `form:"Address" json:"Address"`
+	FiscalCode  string `form:"FiscalCode" json:"FiscalCode"`
+	Status      string `form:"Status" json:"Status"`
+}
+
+type Student struct {
+	Username     string `gorm:"not null, PRIMARY_KEY" form:"Username" json:"Username"`
+	FirstName    string `gorm:"not null" form:"FirstName " json:"FirstName "`
+	LastName     string `gorm:"not null" form:"LastName" json:"LastName"`
+	Email        string `gorm:"not null" form:"Email" json:"Email"`
+	PhoneNumber  string `gorm:"not null" form:"PhoneNumber" json:"PhoneNumber"`
+	ClassID      string `gorm:"not null" form:"ClassID" json:"ClassID"`
+	Nationality  string `form:"Nationality" json:"Nationality"`
+	DateOfBirth  string `form:"DateOfBirth" json:"DateOfBirth"`
+	PlaceOfBirth string `form:"PlaceOfBirth" json:"PlaceOfBirth"`
+	Address      string `form:"Address" json:"Address"`
+	FiscalCode   string `form:"FiscalCode" json:"FiscalCode"`
+	EnrolledDate string `form:"EnrolledDate" json:"EnrolledDate"`
+	EndDate      string `form:"EndDate" json:"EndDate"`
+	Status       string `form:"Status" json:"Status"`
 }
 
 type Subject struct {
-	ID    int    `gorm:"PRIMARY_KEY, AUTO_INCREMENT" form:"ID" json:"ID"`
-	Name  string `gorm:"not null" form:"name" json:"name"`
-	Class int    `gorm:"not null" form:"class" json:"class"`
+	ID   int    `gorm:"PRIMARY_KEY, AUTO_INCREMENT" form:"ID" json:"ID"`
+	Name string `gorm:"not null" form:"Name" json:"Name"`
 }
 
 type Class struct {
-	ID       int    `gorm:"PRIMARY_KEY, AUTO_INCREMENT" form:"ID" json:"ID"`
-	Name     string `gorm:"not null" form:"name" json:"name"`
-	Location string `gorm:"not null" form:"location" json:"location"`
+	ClassID  string `gorm:"PRIMARY_KEY" form:"ID" json:"ID"`
+	Location string `gorm:"not null" form:"Location" json:"Location"`
+	Year     string `gorm:"not null" form:"Year" json:"Year"`
+}
+
+type Grade struct {
+	TeacherID string `form:"TeacherID" json:"TeacherID"`
+	StudentID string `form:"StudentID" json:"StudentID"`
+	SubjectID int    `form:"SubjectID" json:"SubjectID"`
+	Year      string `form:"Year" json:"Year"`
+	Date      string `form:"Date" json:"Date"`
+	Grade     int    `form:"Grade" json:"Grade"`
+	Remarks   string `form:"Remarks" json:"Remarks"`
+}
+
+type Payment struct {
+	PaymentID   string `form:"PaymentID" json:"PaymentID"`
+	ParentID    string `form:"ParentID" json:"ParentID"`
+	StudentID   string `form:"StudentID" json:"StudentID"`
+	Amount      int    `form:"Amount" json:"Amount"`
+	Deadline    string `form:"Deadline" json:"Deadline"`
+	CreatedOn   string `form:"CreatedOn" json:"CreatedOn"`
+	Status      string `form:"Status" json:"Status"`
+	Description string `form:"Description" json:"Description"`
+}
+
+type Notification struct {
+	SenderID      string `form:"PaymentID" json:"PaymentID"`
+	DestinationID string `form:"DestinationID" json:"DestinationID"`
+	Topic         int    `form:"Topic" json:"Topic"`
+	Title         string `form:"Title" json:"Title"`
+	Description   string `form:"Description" json:"Description"`
+	Priority      string `form:"Priority" json:"Priority"`
+	StartDate     string `form:"StartDate" json:"StartDate"`
+	EndDate       string `form:"EndDate" json:"EndDate"`
+	Status        string `form:"Status" json:"Status"`
+}
+
+type NotificationTopics struct {
+	//i.e. Payment due, School Trip, Parent-Teacher meeting, Student Medical Checkups etc...
+	TopicID   int    `form:"TopicID" json:"TopicID"`
+	TopicText string `form:"TopicText" json:"TopicText"`
+}
+
+type Appointment struct {
+	AppointmentID string `form:"AppointmentID" json:"AppointmentID"`
+	TeacherID     string `form:"TeacherID" json:"TeacherID"`
+	ParentID      string `form:"ParentID" json:"ParentID"`
+	Date          string `form:"Date" json:"Date"`
+	FullDay       bool   `form:"FullDay" json:"FullDay"`
+	StartTime     string `form:"StartTime" json:"StartTime"`
+	EndTime       string `form:"EndTime" json:"EndTime"`
+	Remarks       string `form:"Remarks" json:"Remarks"`
+	Status        string `form:"Status" json:"Status"`
+}
+
+type TeachClass struct {
+	TeacherID string `form:"TeacherID" json:"TeacherID"`
+	ClassID   string `form:"ClassID" json:"ClassID"`
+	SubjectID int    `form:"SubjectID" json:"SubjectID"`
+	Schedule  string `form:"Schedule" json:"Schedule"`
+	Year      string `form:"Year" json:"Year"`
+	Program   string `form:"Program" json:"Program"`
+	Book      string `form:"Book" json:"Book"`
+}
+
+type ParentOf struct {
+	StudentID    string `form:"StudentID" json:"StudentID"`
+	ParentID     string `form:"ParentID" json:"ParentID"`
+	Relationship string `form:"Relationship" json:"Relationship"`
+	Status       string `form:"Status" json:"Status"`
 }
 
 func InitDb() *gorm.DB {
@@ -49,6 +147,11 @@ func InitDb() *gorm.DB {
 	if err != nil {
 		panic(err)
 	}
+	//Tables: User Teacher Parent Student Subject Class Grade Payment Notification NotificationTopics Appointment TeachClass ParentOf
+	if !db.HasTable(&User{}) {
+		db.CreateTable(&User{})
+		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&User{})
+	}
 	if !db.HasTable(&Teacher{}) {
 		db.CreateTable(&Teacher{})
 		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&Teacher{})
@@ -57,6 +160,10 @@ func InitDb() *gorm.DB {
 		db.CreateTable(&Parent{})
 		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&Parent{})
 	}
+	if !db.HasTable(&Student{}) {
+		db.CreateTable(&Student{})
+		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&Student{})
+	}
 	if !db.HasTable(&Subject{}) {
 		db.CreateTable(&Subject{})
 		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&Subject{})
@@ -64,6 +171,34 @@ func InitDb() *gorm.DB {
 	if !db.HasTable(&Class{}) {
 		db.CreateTable(&Class{})
 		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&Class{})
+	}
+	if !db.HasTable(&Grade{}) {
+		db.CreateTable(&Grade{})
+		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&Grade{})
+	}
+	if !db.HasTable(&Payment{}) {
+		db.CreateTable(&Payment{})
+		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&Payment{})
+	}
+	if !db.HasTable(&Notification{}) {
+		db.CreateTable(&Notification{})
+		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&Notification{})
+	}
+	if !db.HasTable(&NotificationTopics{}) {
+		db.CreateTable(&NotificationTopics{})
+		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&NotificationTopics{})
+	}
+	if !db.HasTable(&Appointment{}) {
+		db.CreateTable(&Appointment{})
+		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&Appointment{})
+	}
+	if !db.HasTable(&TeachClass{}) {
+		db.CreateTable(&TeachClass{})
+		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&TeachClass{})
+	}
+	if !db.HasTable(&ParentOf{}) {
+		db.CreateTable(&ParentOf{})
+		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&ParentOf{})
 	}
 	return db
 }
