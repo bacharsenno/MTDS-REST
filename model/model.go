@@ -58,11 +58,6 @@ type Student struct {
 	Status       string `form:"Status" json:"Status"`
 }
 
-type Subject struct {
-	ID   int    `gorm:"PRIMARY_KEY, AUTO_INCREMENT" form:"ID" json:"ID"`
-	Name string `gorm:"not null" form:"Name" json:"Name"`
-}
-
 type Class struct {
 	ClassID  string `gorm:"PRIMARY_KEY" form:"ID" json:"ID"`
 	Location string `gorm:"not null" form:"Location" json:"Location"`
@@ -93,19 +88,14 @@ type Payment struct {
 type Notification struct {
 	SenderID      string `form:"PaymentID" json:"PaymentID"`
 	DestinationID string `form:"DestinationID" json:"DestinationID"`
-	Topic         int    `form:"Topic" json:"Topic"`
-	Title         string `form:"Title" json:"Title"`
-	Description   string `form:"Description" json:"Description"`
-	Priority      string `form:"Priority" json:"Priority"`
-	StartDate     string `form:"StartDate" json:"StartDate"`
-	EndDate       string `form:"EndDate" json:"EndDate"`
-	Status        string `form:"Status" json:"Status"`
-}
-
-type NotificationTopics struct {
-	//i.e. Payment due, School Trip, Parent-Teacher meeting, Student Medical Checkups etc...
-	TopicID   int    `form:"TopicID" json:"TopicID"`
-	TopicText string `form:"TopicText" json:"TopicText"`
+	//Topic i.e. Payment due, School Trip, Parent-Teacher meeting, Student Medical Checkups etc...
+	Topic       string `form:"Topic" json:"Topic"`
+	Title       string `form:"Title" json:"Title"`
+	Description string `form:"Description" json:"Description"`
+	Priority    string `form:"Priority" json:"Priority"`
+	StartDate   string `form:"StartDate" json:"StartDate"`
+	EndDate     string `form:"EndDate" json:"EndDate"`
+	Status      string `form:"Status" json:"Status"`
 }
 
 type Appointment struct {
@@ -123,7 +113,7 @@ type Appointment struct {
 type TeachClass struct {
 	TeacherID string `form:"TeacherID" json:"TeacherID"`
 	ClassID   string `form:"ClassID" json:"ClassID"`
-	SubjectID int    `form:"SubjectID" json:"SubjectID"`
+	Subject   string `form:"Subject" json:"Subject"`
 	Schedule  string `form:"Schedule" json:"Schedule"`
 	Year      string `form:"Year" json:"Year"`
 	Program   string `form:"Program" json:"Program"`
@@ -164,10 +154,6 @@ func InitDb() *gorm.DB {
 		db.CreateTable(&Student{})
 		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&Student{})
 	}
-	if !db.HasTable(&Subject{}) {
-		db.CreateTable(&Subject{})
-		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&Subject{})
-	}
 	if !db.HasTable(&Class{}) {
 		db.CreateTable(&Class{})
 		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&Class{})
@@ -183,10 +169,6 @@ func InitDb() *gorm.DB {
 	if !db.HasTable(&Notification{}) {
 		db.CreateTable(&Notification{})
 		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&Notification{})
-	}
-	if !db.HasTable(&NotificationTopics{}) {
-		db.CreateTable(&NotificationTopics{})
-		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&NotificationTopics{})
 	}
 	if !db.HasTable(&Appointment{}) {
 		db.CreateTable(&Appointment{})

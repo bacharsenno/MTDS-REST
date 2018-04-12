@@ -1,8 +1,9 @@
 package utils
 
 import (
-	"awesomeProject/model"
+	"MTDS-REST/model"
 	"fmt"
+	"net/http"
 	"strconv"
 	s "strings"
 
@@ -16,9 +17,9 @@ type Teacher = model.Teacher
 type Parent = model.Parent
 type Student = model.Student
 type Class = model.Class
-type Subject = model.Subject
 type TeachClass = model.TeachClass
 type ParentOf = model.ParentOf
+type Notification = model.Notification
 
 var InitDb = model.InitDb
 
@@ -52,15 +53,6 @@ func SetupRoutes() {
 		parent.GET("/:id", GetParent)
 		parent.PUT("/:id", UpdateParent)
 		parent.DELETE("/:id", DeleteParent)
-	}
-
-	subject := R.Group("api/v1/subject")
-	{
-		subject.POST("/", PostSubject)
-		subject.GET("/", GetSubject)
-		subject.GET("/:id", GetSubject)
-		subject.PUT("/:id", UpdateSubject)
-		subject.DELETE("/:id", DeleteSubject)
 	}
 
 	class := R.Group("api/v1/class")
@@ -121,7 +113,7 @@ func GenerateTestData(c *gin.Context) {
 	}
 	k := 1
 	for i := 1; i <= 10; i++ {
-		for j := 1; j <= 10; j++ {
+		for j := 1; j <= 20; j++ {
 			student := Student{
 				Username:    "S" + strconv.Itoa(k),
 				FirstName:   "SFirstName" + strconv.Itoa(k),
@@ -135,28 +127,25 @@ func GenerateTestData(c *gin.Context) {
 		}
 	}
 	for i := 1; i <= 10; i++ {
-		subject := Subject{
-			ID:   i,
-			Name: "SName" + strconv.Itoa(i),
-		}
-		db.Create(&subject)
-	}
-	for i := 1; i <= 10; i++ {
 		for j := 1; j <= 10; j++ {
 			teachClass := TeachClass{
 				TeacherID: "T" + strconv.Itoa(i),
 				ClassID:   "C" + strconv.Itoa(j),
-				SubjectID: i,
+				Subject:   "SubjectName" + strconv.Itoa(i),
 			}
 			db.Create(teachClass)
 		}
 	}
+	k = 1
 	for i := 1; i <= 100; i++ {
-		parentOf := ParentOf{
-			StudentID: "S" + strconv.Itoa(i),
-			ParentID:  "P" + strconv.Itoa(i),
+		for j := 1; j <= 2; j++ {
+			parentOf := ParentOf{
+				StudentID: "S" + strconv.Itoa(k),
+				ParentID:  "P" + strconv.Itoa(i),
+			}
+			k++
+			db.Create(&parentOf)
 		}
-		db.Create(&parentOf)
 	}
 
 }
@@ -171,23 +160,35 @@ func PostLogin(c *gin.Context) {
 	fmt.Println("Username: " + username)
 	fmt.Println("Password: " + password)
 	if s.HasPrefix(username, "T") {
-		var teacher Teacher
-		db.Where("username = ? AND password = ?", username, password).First(&teacher)
-		if teacher.Username != "" {
-			c.JSON(200, teacher)
+		var loggedUser User
+		db.Where("username = ? AND password = ?", username, password).First(&loggedUser)
+		if loggedUser.Username != "" {
+			var teacher Teacher
+			var teachClasses []TeachClass
+			var notifications []Notification
+			db.Where("username = ?", username).First(&teacher)
+			db.Table("teach_classes tc, teachers t").Where("tc.teacher_id = t.username and t.username = ?", username).Find(&teachClasses)
+			db.Where("destination_id in ('ALL', 'TEACHERS', ?)", username).Find(&notifications)
+			c.JSON(http.StatusOK, gin.H{"Teacher": teacher, "Classes": teachClasses})
 		} else {
-			c.JSON(404, gin.H{"error": "Teacher not found"})
+			c.JSON(http.StatusNotFound, gin.H{"error": "Username/Password combination not found"})
 		}
 	} else if s.HasPrefix(username, "P") {
-		var parent Parent
-		db.Where("username = ? AND password = ?", username, password).First(&parent)
-		if parent.Username != "" {
-			c.JSON(200, parent)
+		var loggedUser User
+		db.Where("username = ? AND password = ?", username, password).First(&loggedUser)
+		if loggedUser.Username != "" {
+			var parent Parent
+			var students []Student
+			var notifications []Notification
+			db.Where("username = ?", username).First(&parent)
+			db.Joins("JOIN parent_ofs po on po.student_id = students.username").Where("po.parent_id = ?", username).Find(&students)
+			db.Where("destination_id in ('ALL', 'PARENTS', ?)", username).Find(&notifications)
+			c.JSON(http.StatusOK, gin.H{"Parent": parent, "Students": students, "Notifications": notifications})
 		} else {
-			c.JSON(404, gin.H{"error": "Parent not found"})
+			c.JSON(http.StatusNotFound, gin.H{"error": "Username/Password combination not found"})
 		}
 	} else {
-		c.JSON(408, gin.H{"error": "Invalid Username"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Invalid Username"})
 	}
 }
 

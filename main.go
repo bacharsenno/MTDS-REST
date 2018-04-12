@@ -1,7 +1,7 @@
 package main
 
 import (
-	"awesomeProject/utils"
+	"MTDS-REST/utils"
 
 	_ "github.com/go-sql-driver/mysql"
 )
