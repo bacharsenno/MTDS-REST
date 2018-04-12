@@ -1,5 +1,8 @@
 # Middleware Technologies Project
 
+##Initial Configuration
+Sent a GET request to http://localhost:8080/api/v1/test to generate the test data; make sure mysql is running and that you specified correctly the database name in model.go InitDb function.
+
 ### Initial project choices
 |DB | Language | Web Framework | Frontend
 |---|---|---|---|
