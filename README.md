@@ -1,16 +1,18 @@
 # Middleware Technologies Project
 
-##Initial Configuration
-Sent a GET request to http://localhost:8080/api/v1/test to generate the test data; make sure mysql is running and that you specified correctly the database name in model.go InitDb function.
+## Initial Configuration
 
-### Initial project choices
-|DB | Language | Web Framework | Frontend
-|---|---|---|---|
-|mySQL|Java|Jersey|PHP|
-|mongoDB|Python|Django|Javascript (Node,Angular,React,...)|
-||ExpressJS|
-||PHP||
-||Ruby
+- Drop all of the tables you have after every pull because sometimes I change the table structures
+- Send a GET request to http://localhost:8080/api/v1/test to generate the test data; make sure mysql is running and that you specified correctly the database name in model.go InitDb function.
+- Implemented calls (so far):
+	- [http://localhost:8080/api/v1/test](http://localhost:8080/api/v1/test) : GENERATE DATABASE
+	- [http://localhost:8080/api/v1/login](http://localhost:8080/api/v1/login) :
+		- POST Body Example: {'username': 'P1', 'password': 'PP1'}
+		- Reply: 404 if not found, otherwise Parent/Teacher object
+	- [http://localhost:8080/api/v1/notifications?id=T1](http://localhost:8080/api/v1/notifications?id=T1) : returns notifications of user P1
+	- [http://localhost:8080/api/v1/appointments?id=T1&scope=day](http://localhost:8080/api/v1/appointments?id=T1&scope=day) (or scope=week): returns appointments for current day/week
+	- [http://localhost:8080/api/v1/agenda?id=T1&scope=day](http://localhost:8080/api/v1/agenda?id=T1&scope=day) (or scope=week): returns classes + schedule for current day/week
+	- [http://localhost:8080/api/v1/classes?id=T1](http://localhost:8080/api/v1/classes?id=T1) : returns all classes of Teacher T1
 
 __Documentation__: 
 
@@ -28,20 +30,6 @@ __Documentation__:
 ---
 
 # REST Project
-## To-do 26/02/2018
-- Learn about:
-    - Go + web framework
-    - ReactJS + JS
-- Learn design best practices of FE,BE,API,DB
-- Prepare design of the database (ER diagram)
-
-## To-do 22/03/2018
-- Set up git repository
-- Choose GO package manager
-- Work at simple REST demo
-- Frontend design
-- REST API design
-
 ## Useful links:
 - documentation: [readthedocs](https://readthedocs.org/)
 - SoapUI: API tester
@@ -66,25 +54,6 @@ More general than "go by example"
 - [GO Package management](https://github.com/golang/go/wiki/PackageManagementTools)
 - https://medium.com/@cgrant/developing-a-simple-crud-api-with-go-gin-and-gorm-df87d98e6ed1
 - https://medium.com/@thedevsaddam/build-restful-api-service-in-golang-using-gin-gonic-framework-85b1a6e176f3
-#### Go WEB frameworks
-- [Revel](http://revel.github.io/): 
-    - fully featured 
-    - no MongoDB
-- [Gin Gonic](https://gin-gonic.github.io/gin/): 
-    - minimalistic
-    - designed after Martini
-    - high perfomance (40x faster than Martini)
-    - less support for extensions
-    - offload to client
-    - no enterprise features
-- Martini
-    - great 3rd party extensions support
-    - good docs
-    - 40x slower than Gin
-    - not maintained since 2014
-    - dependency injection (apparently is a bad thing for Golang)
-- [Other possibilities, with comparisons](https://blog.usejournal.com/top-6-web-frameworks-for-go-as-of-2017-23270e059c4b)
-
 ### Database and ORM with GO
 - discussion >>https://forum.golangbridge.org/t/which-orm-is-best-for-golang/6268/2
 - http://www.hydrogen18.com/blog/golang-orms-and-why-im-still-not-using-one.html

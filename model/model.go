@@ -58,11 +58,11 @@ type Student struct {
 	Status       string `form:"Status" json:"Status"`
 }
 
-type Class struct {
-	ClassID  string `gorm:"PRIMARY_KEY" form:"ID" json:"ID"`
-	Location string `gorm:"not null" form:"Location" json:"Location"`
-	Year     string `gorm:"not null" form:"Year" json:"Year"`
-}
+// type Class struct {
+// 	ClassID  string `gorm:"PRIMARY_KEY" form:"ID" json:"ID"`
+// 	Location string `gorm:"not null" form:"Location" json:"Location"`
+// 	Year     string `gorm:"not null" form:"Year" json:"Year"`
+// }
 
 type Grade struct {
 	TeacherID string `form:"TeacherID" json:"TeacherID"`
@@ -86,7 +86,7 @@ type Payment struct {
 }
 
 type Notification struct {
-	SenderID      string `form:"PaymentID" json:"PaymentID"`
+	SenderID      string `form:"SenderID" json:"SenderID"`
 	DestinationID string `form:"DestinationID" json:"DestinationID"`
 	//Topic i.e. Payment due, School Trip, Parent-Teacher meeting, Student Medical Checkups etc...
 	Topic       string `form:"Topic" json:"Topic"`
@@ -99,7 +99,7 @@ type Notification struct {
 }
 
 type Appointment struct {
-	AppointmentID string `form:"AppointmentID" json:"AppointmentID"`
+	AppointmentID int    `form:"AppointmentID" json:"AppointmentID"`
 	TeacherID     string `form:"TeacherID" json:"TeacherID"`
 	ParentID      string `form:"ParentID" json:"ParentID"`
 	Date          string `form:"Date" json:"Date"`
@@ -110,14 +110,24 @@ type Appointment struct {
 	Status        string `form:"Status" json:"Status"`
 }
 
+type Schedule struct {
+	ScheduleID int    `form:"ScheduleID" json:"ScheduleID"`
+	Day        string `form:"Day" json:"Day"`
+	StartTime  string `form:"StartTime" json:"StartTime"`
+	EndTime    string `form:"EndTime" json:"EndTime"`
+	StartDate  string `form:"StartDate" json:"StartDate"`
+	EndDate    string `form:"EndDate" json:"EndDate"`
+}
+
 type TeachClass struct {
-	TeacherID string `form:"TeacherID" json:"TeacherID"`
-	ClassID   string `form:"ClassID" json:"ClassID"`
-	Subject   string `form:"Subject" json:"Subject"`
-	Schedule  string `form:"Schedule" json:"Schedule"`
-	Year      string `form:"Year" json:"Year"`
-	Program   string `form:"Program" json:"Program"`
-	Book      string `form:"Book" json:"Book"`
+	TeacherID  string `form:"TeacherID" json:"TeacherID"`
+	ClassID    string `form:"ClassID" json:"ClassID"`
+	Subject    string `form:"Subject" json:"Subject"`
+	ScheduleID int    `form:"Schedule" json:"Schedule"`
+	Location   string `form:"Location" json:"Location"`
+	Year       string `form:"Year" json:"Year"`
+	Program    string `form:"Program" json:"Program"`
+	Book       string `form:"Book" json:"Book"`
 }
 
 type ParentOf struct {
@@ -125,6 +135,11 @@ type ParentOf struct {
 	ParentID     string `form:"ParentID" json:"ParentID"`
 	Relationship string `form:"Relationship" json:"Relationship"`
 	Status       string `form:"Status" json:"Status"`
+}
+
+type ClassSchedule struct {
+	TeachClass `form:"TeachClass" json:"TeachClass"`
+	Time       []Schedule `form:"Schedule" json:"Schedule"`
 }
 
 func InitDb() *gorm.DB {
@@ -154,9 +169,13 @@ func InitDb() *gorm.DB {
 		db.CreateTable(&Student{})
 		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&Student{})
 	}
-	if !db.HasTable(&Class{}) {
-		db.CreateTable(&Class{})
-		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&Class{})
+	// if !db.HasTable(&Class{}) {
+	// 	db.CreateTable(&Class{})
+	// 	db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&Class{})
+	// }
+	if !db.HasTable(&Schedule{}) {
+		db.CreateTable(&Schedule{})
+		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&Schedule{})
 	}
 	if !db.HasTable(&Grade{}) {
 		db.CreateTable(&Grade{})
