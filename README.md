@@ -9,10 +9,10 @@
 	- [http://localhost:8080/api/v1/login](http://localhost:8080/api/v1/login) :
 		- POST Body Example: {'username': 'P1', 'password': 'PP1'}
 		- Reply: 404 if not found, otherwise Parent/Teacher object
-	- [http://localhost:8080/api/v1/notifications?id=T1](http://localhost:8080/api/v1/notifications?id=T1) : returns notifications of user P1
-	- [http://localhost:8080/api/v1/appointments?id=T1&scope=day](http://localhost:8080/api/v1/appointments?id=T1&scope=day) (or scope=week): returns appointments for current day/week
-	- [http://localhost:8080/api/v1/agenda?id=T1&scope=day](http://localhost:8080/api/v1/agenda?id=T1&scope=day) (or scope=week): returns classes + schedule for current day/week
-	- [http://localhost:8080/api/v1/classes?id=T1](http://localhost:8080/api/v1/classes?id=T1) : returns all classes of Teacher T1
+	- [http://localhost:8080/api/v1/teacher/notifications?id=T1](http://localhost:8080/api/v1/teacher/notifications?id=T1) : returns notifications of user P1
+	- [http://localhost:8080/api/v1/teacher/appointments?id=T1&scope=day](http://localhost:8080/api/v1/teacher/appointments?id=T1&scope=day) (or scope=week): returns appointments for current day/week
+	- [http://localhost:8080/api/v1/teacher/agenda?id=T1&scope=day](http://localhost:8080/api/v1/teacher/agenda?id=T1&scope=day) (or scope=week): returns classes + schedule for current day/week
+	- [http://localhost:8080/api/v1/teacher/classes?id=T1](http://localhost:8080/api/v1/teacher/classes?id=T1) : returns all classes of Teacher T1
 
 __Documentation__: 
 
