@@ -374,7 +374,7 @@ func GetParentAppointments(c *gin.Context) {
 	}
 	for i := 0; i < len(appointments); i++ {
 		row := db.Table("teachers t").Select("Concat(t.first_name, ' ', t.last_name) as Name").Where("t.username = ?", appointments[i].TeacherID).Row()
-		row.Scan(&appointments[i].ParentID)
+		row.Scan(&appointments[i].TeacherID)
 	}
 	c.JSON(http.StatusOK, appointments)
 }
