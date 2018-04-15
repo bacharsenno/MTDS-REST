@@ -18,7 +18,7 @@
 	- [http://localhost:8080/api/v1/teacher/classes?id=T1](http://localhost:8080/api/v1/teacher/classes?id=T1) : returns all classes of Teacher T1
 	
 - Parent API:
-	- [http://localhost:8080/api/v1/parent/notifications?id=P1] (http://localhost:8080/api/v1/parent/notifications?id=P1) : return notifications of parent P1
+	- [http://localhost:8080/api/v1/parent/notifications?id=P1](http://localhost:8080/api/v1/parent/notifications?id=P1) : return notifications of parent P1
 	- [http://localhost:8080/api/v1/parent/appointments?id=P1&scope=day](http://localhost:8080/api/v1/parent/appointments?id=P1&scope=day) (or scope=week): returns appointments for current day/week
 	- [http://localhost:8080/api/v1/parent/students?id=P1](http://localhost:8080/api/v1/parent/students?id=P1) : returns students associated with parent P1
 	- [http://localhost:8080/api/v1/parent/payments?id=P1](http://localhost:8080/api/v1/parent/payments?id=P1) : returns payments associated with parent P1
