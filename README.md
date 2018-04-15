@@ -4,15 +4,26 @@
 
 - Drop all of the tables you have after every pull because sometimes I change the table structures
 - Send a GET request to http://localhost:8080/api/v1/test to generate the test data; make sure mysql is running and that you specified correctly the database name in model.go InitDb function.
+
 - Implemented calls (so far):
-	- [http://localhost:8080/api/v1/test](http://localhost:8080/api/v1/test) : GENERATE DATABASE
-	- [http://localhost:8080/api/v1/login](http://localhost:8080/api/v1/login) :
-		- POST Body Example: {'username': 'P1', 'password': 'PP1'}
-		- Reply: 404 if not found, otherwise Parent/Teacher object
-	- [http://localhost:8080/api/v1/teacher/notifications?id=T1](http://localhost:8080/api/v1/teacher/notifications?id=T1) : returns notifications of user P1
+- [http://localhost:8080/api/v1/test](http://localhost:8080/api/v1/test) : GENERATE DATABASE
+- [http://localhost:8080/api/v1/login](http://localhost:8080/api/v1/login) :
+	- POST Body Example: {'username': 'P1', 'password': 'PP1'}
+	- Reply: 404 if not found, otherwise Parent/Teacher object	
+	
+- Teacher API:				
+	- [http://localhost:8080/api/v1/teacher/notifications?id=T1](http://localhost:8080/api/v1/teacher/notifications?id=T1) : returns notifications of teacher T1
 	- [http://localhost:8080/api/v1/teacher/appointments?id=T1&scope=day](http://localhost:8080/api/v1/teacher/appointments?id=T1&scope=day) (or scope=week): returns appointments for current day/week
 	- [http://localhost:8080/api/v1/teacher/agenda?id=T1&scope=day](http://localhost:8080/api/v1/teacher/agenda?id=T1&scope=day) (or scope=week): returns classes + schedule for current day/week
 	- [http://localhost:8080/api/v1/teacher/classes?id=T1](http://localhost:8080/api/v1/teacher/classes?id=T1) : returns all classes of Teacher T1
+	
+- Parent API:
+	- [http://localhost:8080/api/v1/parent/notifications?id=P1] (http://localhost:8080/api/v1/parent/notifications?id=P1) : return notifications of parent P1
+	- [http://localhost:8080/api/v1/parent/appointments?id=P1&scope=day](http://localhost:8080/api/v1/parent/appointments?id=P1&scope=day) (or scope=week): returns appointments for current day/week
+	- [http://localhost:8080/api/v1/parent/students?id=P1](http://localhost:8080/api/v1/parent/students?id=P1) : returns students associated with parent P1
+	- [http://localhost:8080/api/v1/parent/payments?id=P1](http://localhost:8080/api/v1/parent/payments?id=P1) : returns payments associated with parent P1
+	
+
 
 __Documentation__: 
 

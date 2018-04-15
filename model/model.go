@@ -48,6 +48,7 @@ type Student struct {
 	Email        string `gorm:"not null" form:"Email" json:"Email"`
 	PhoneNumber  string `gorm:"not null" form:"PhoneNumber" json:"PhoneNumber"`
 	ClassID      string `gorm:"not null" form:"ClassID" json:"ClassID"`
+	GPA          string `gorm:"not null" form:"GPA" json:"GPA"`
 	Nationality  string `form:"Nationality" json:"Nationality"`
 	DateOfBirth  string `form:"DateOfBirth" json:"DateOfBirth"`
 	PlaceOfBirth string `form:"PlaceOfBirth" json:"PlaceOfBirth"`
@@ -57,12 +58,6 @@ type Student struct {
 	EndDate      string `form:"EndDate" json:"EndDate"`
 	Status       string `form:"Status" json:"Status"`
 }
-
-// type Class struct {
-// 	ClassID  string `gorm:"PRIMARY_KEY" form:"ID" json:"ID"`
-// 	Location string `gorm:"not null" form:"Location" json:"Location"`
-// 	Year     string `gorm:"not null" form:"Year" json:"Year"`
-// }
 
 type Grade struct {
 	TeacherID string `form:"TeacherID" json:"TeacherID"`
@@ -78,7 +73,7 @@ type Payment struct {
 	PaymentID   string `form:"PaymentID" json:"PaymentID"`
 	ParentID    string `form:"ParentID" json:"ParentID"`
 	StudentID   string `form:"StudentID" json:"StudentID"`
-	Amount      int    `form:"Amount" json:"Amount"`
+	Amount      string `form:"Amount" json:"Amount"`
 	Deadline    string `form:"Deadline" json:"Deadline"`
 	CreatedOn   string `form:"CreatedOn" json:"CreatedOn"`
 	Status      string `form:"Status" json:"Status"`
@@ -169,10 +164,6 @@ func InitDb() *gorm.DB {
 		db.CreateTable(&Student{})
 		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&Student{})
 	}
-	// if !db.HasTable(&Class{}) {
-	// 	db.CreateTable(&Class{})
-	// 	db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&Class{})
-	// }
 	if !db.HasTable(&Schedule{}) {
 		db.CreateTable(&Schedule{})
 		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&Schedule{})

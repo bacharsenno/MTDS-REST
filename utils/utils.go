@@ -22,6 +22,7 @@ type Notification = model.Notification
 type Schedule = model.Schedule
 type Appointment = model.Appointment
 type ClassSchedule = model.ClassSchedule
+type Payment = model.Payment
 
 // type Class = model.Class
 
@@ -35,6 +36,8 @@ func Cors() gin.HandlerFunc {
 }
 
 func SetupRoutes() {
+
+	R.Use(Cors())
 
 	login := R.Group("api/v1/login")
 	{
@@ -51,20 +54,10 @@ func SetupRoutes() {
 
 	parent := R.Group("api/v1/parent")
 	{
-		parent.POST("/", PostParent)
-		parent.GET("/", GetParents)
-		parent.GET("/:id", GetParent)
-		parent.PUT("/:id", UpdateParent)
-		parent.DELETE("/:id", DeleteParent)
-	}
-
-	class := R.Group("api/v1/class")
-	{
-		class.POST("/", PostClass)
-		class.GET("/", GetClass)
-		class.GET("/:id", GetClass)
-		class.PUT("/:id", UpdateClass)
-		class.DELETE("/:id", DeleteClass)
+		parent.GET("/notifications", GetParentNotifications)
+		parent.GET("/appointments", GetParentAppointments)
+		parent.GET("/students", GetParentStudents)
+		parent.GET("/payments", GetParentPayments)
 	}
 
 	test := R.Group("api/v1/test")
@@ -78,11 +71,24 @@ func GenerateTestData(c *gin.Context) {
 	defer db.Close()
 	for i := 1; i <= 10; i++ {
 		teacher := Teacher{
-			Username:    "T" + strconv.Itoa(i),
-			FirstName:   "TFirstName" + strconv.Itoa(i),
-			LastName:    "TLastName" + strconv.Itoa(i),
-			Email:       "TEmail" + strconv.Itoa(i),
-			PhoneNumber: "TPhoneNumber" + strconv.Itoa(i),
+			Username:         "T" + strconv.Itoa(i),
+			FirstName:        "TFirstName" + strconv.Itoa(i),
+			LastName:         "TLastName" + strconv.Itoa(i),
+			Email:            "TEmail" + strconv.Itoa(i),
+			PhoneNumber:      "TPhoneNumber" + strconv.Itoa(i),
+			DateOfBirth:      "TDoB" + strconv.Itoa(i),
+			PlaceOfBirth:     "TPoB" + strconv.Itoa(i),
+			Nationality:      "TNationality" + strconv.Itoa(i),
+			Address:          "TAddr" + strconv.Itoa(i),
+			FiscalCode:       "TFiscCode" + strconv.Itoa(i),
+			GradDegree:       "TGradDeg" + strconv.Itoa(i),
+			GradFieldOfStudy: "TGradField" + strconv.Itoa(i),
+			GradGrade:        "TGradGrade" + strconv.Itoa(i),
+			GradSchool:       "TGradSchool" + strconv.Itoa(i),
+			SeniorityLevel:   "TSenLevel" + strconv.Itoa(i),
+			StartDate:        "TStartDate" + strconv.Itoa(i),
+			EndDate:          "TEndDate" + strconv.Itoa(i),
+			Status:           "1",
 		}
 		user := User{
 			Username: "T" + strconv.Itoa(i),
@@ -99,6 +105,10 @@ func GenerateTestData(c *gin.Context) {
 			LastName:    "PLastName" + strconv.Itoa(i),
 			Email:       "PEmail" + strconv.Itoa(i),
 			PhoneNumber: "PPhoneNumber" + strconv.Itoa(i),
+			Nationality: "PNationality" + strconv.Itoa(i),
+			Address:     "PAddress" + strconv.Itoa(i),
+			FiscalCode:  "PFiscCode" + strconv.Itoa(i),
+			Status:      "1",
 		}
 		user := User{
 			Username: "P" + strconv.Itoa(i),
@@ -108,60 +118,82 @@ func GenerateTestData(c *gin.Context) {
 		db.Create(&parent)
 		db.Create(&user)
 	}
-	// for i := 1; i <= 10; i++ {
-	// 	class := Class{
-	// 		ClassID: "C" + strconv.Itoa(i),
-	// 	}
-	// 	db.Create(&class)
-	// }
 	k := 1
 	for i := 1; i <= 10; i++ {
 		for j := 1; j <= 20; j++ {
 			student := Student{
-				Username:    "S" + strconv.Itoa(k),
-				FirstName:   "SFirstName" + strconv.Itoa(k),
-				LastName:    "SLastName" + strconv.Itoa(k),
-				Email:       "SEmail" + strconv.Itoa(k),
-				PhoneNumber: "SPhoneNumber" + strconv.Itoa(k),
-				ClassID:     "C" + strconv.Itoa(i),
+				Username:     "S" + strconv.Itoa(k),
+				FirstName:    "SFirstName" + strconv.Itoa(k),
+				LastName:     "SLastName" + strconv.Itoa(k),
+				Email:        "SEmail" + strconv.Itoa(k),
+				PhoneNumber:  "SPhoneNumber" + strconv.Itoa(k),
+				ClassID:      "C" + strconv.Itoa(i),
+				GPA:          "80.0",
+				Nationality:  "SNationality" + strconv.Itoa(k),
+				DateOfBirth:  "SDoB" + strconv.Itoa(k),
+				PlaceOfBirth: "SPoB" + strconv.Itoa(k),
+				Address:      "SAddress" + strconv.Itoa(k),
+				FiscalCode:   "SFiscCode" + strconv.Itoa(k),
+				EnrolledDate: "SEnrollDate" + strconv.Itoa(k),
+				EndDate:      "SEndDate" + strconv.Itoa(k),
+				Status:       "1",
 			}
 			db.Create(&student)
 			k++
 		}
 	}
+	k = 1
 	for i := 1; i <= 10; i++ {
 		for j := 1; j <= 10; j++ {
 			teachClass := TeachClass{
-				TeacherID: "T" + strconv.Itoa(i),
-				ClassID:   "C" + strconv.Itoa(j),
-				Location:  "R" + strconv.Itoa(j),
-				Subject:   "SubjectName" + strconv.Itoa(i),
+				TeacherID:  "T" + strconv.Itoa(i),
+				ClassID:    "C" + strconv.Itoa(j),
+				Subject:    "SubjectName" + strconv.Itoa(i),
+				ScheduleID: 721 + k,
+				Location:   "R" + strconv.Itoa(j),
+				Year:       "2018",
+				Program:    "TCProgram" + strconv.Itoa(k),
+				Book:       "TCBook" + strconv.Itoa(k),
 			}
-			if i == 1 {
-				teachClass.ScheduleID = 721 + j
-			}
+			k++
 			db.Create(teachClass)
 		}
 	}
 	k = 1
 	for i := 1; i <= 100; i++ {
 		for j := 1; j <= 2; j++ {
+			r := "Father"
+			if i%2 == 0 {
+				r = "Mother"
+			}
 			parentOf := ParentOf{
-				StudentID: "S" + strconv.Itoa(k),
-				ParentID:  "P" + strconv.Itoa(i),
+				StudentID:    "S" + strconv.Itoa(k),
+				ParentID:     "P" + strconv.Itoa(i),
+				Relationship: r,
+				Status:       "1",
 			}
 			k++
 			db.Create(&parentOf)
 		}
 	}
-	for i := 1; i <= 5; i++ {
+	for i := 1; i <= 20; i++ {
+		DestinationID := "ALL"
+		if i > 10 && i <= 15 {
+			DestinationID = "TEACHERS"
+		}
+		if i > 15 {
+			DestinationID = "PARENTS"
+		}
 		notification := Notification{
 			SenderID:      "School",
-			DestinationID: "ALL",
+			DestinationID: DestinationID,
 			Topic:         "NTOPIC" + strconv.Itoa(i),
 			Title:         "NTITLE" + strconv.Itoa(i),
 			Description:   "NDESCRIPTION" + strconv.Itoa(i),
 			Priority:      strconv.Itoa(i),
+			StartDate:     "NStartDate" + strconv.Itoa(i),
+			EndDate:       "NEndDate" + strconv.Itoa(i),
+			Status:        "1",
 		}
 		db.Create(&notification)
 	}
@@ -187,12 +219,29 @@ func GenerateTestData(c *gin.Context) {
 			AppointmentID: i,
 			TeacherID:     "T1",
 			ParentID:      "P" + strconv.Itoa(i),
-			Date:          "1" + strconv.Itoa(i+2) + "-04-2018", //hhhhhhere, need to change this to generate appointments with the correct date
+			Date:          getDateString("day", i-1),
 			FullDay:       false,
 			StartTime:     strconv.Itoa(i + 12),
 			EndTime:       strconv.Itoa(i + 13),
 		}
 		db.Create(&appointment)
+	}
+	m := 1
+	for i := 1; i <= 5; i++ {
+		for j := 1; j <= 2; j++ {
+			payment := Payment{
+				PaymentID:   "PID" + strconv.Itoa(m),
+				ParentID:    "P" + strconv.Itoa(i),
+				StudentID:   "S" + strconv.Itoa(m),
+				Amount:      "100,000",
+				Deadline:    "PayDeadline" + strconv.Itoa(m),
+				CreatedOn:   "PayCreated" + strconv.Itoa(m),
+				Status:      strconv.Itoa(j),
+				Description: "PayDesc" + strconv.Itoa(m),
+			}
+			db.Create(&payment)
+			m++
+		}
 	}
 }
 
@@ -246,11 +295,11 @@ func GetTeacherAppointments(c *gin.Context) {
 	var appointments []Appointment
 	switch scope {
 	case "day":
-		date := getDateString(scope)
+		date := getDateString(scope, 0)
 		db.Where("teacher_id = ? AND date = ?", username, date).Find(&appointments)
 	case "week":
-		date := getDateString(scope)
-		db.Raw("SELECT * FROM appointments WHERE (teacher_id = 'T1' AND date in ('" + date + "'))").Find(&appointments)
+		date := getDateString(scope, 0)
+		db.Raw("SELECT * FROM appointments WHERE (teacher_id = ? AND date in ('"+date+"'))", username).Find(&appointments)
 		//db.Where("teacher_id = ? AND date in (?)", username, date).Find(&appointments)
 	}
 	for i := 0; i < len(appointments); i++ {
@@ -299,72 +348,58 @@ func GetTeacherClasses(c *gin.Context) {
 	c.JSON(http.StatusOK, classes)
 }
 
-func PostTeacher(c *gin.Context) {
+func GetParentNotifications(c *gin.Context) {
 	db := InitDb()
 	defer db.Close()
-	var teacher Teacher
-	c.Bind(&teacher)
-	db.Create(&teacher)
-	c.JSON(201, gin.H{"success": teacher})
+	username := c.Query("id")
+	var notifications []Notification
+	db.Where("destination_id in ('ALL', 'PARENTS', ?)", username).Find(&notifications)
+	c.JSON(http.StatusOK, notifications)
 }
 
-func GetTeachers(c *gin.Context) {
+func GetParentAppointments(c *gin.Context) {
 	db := InitDb()
 	defer db.Close()
-	var teachers []Teacher
-	db.Find(&teachers)
-	c.JSON(200, teachers)
-}
-
-func GetTeacher(c *gin.Context) {
-	// db := InitDb()
-	// defer db.Close()
-	// username := c.Params.ByName("Username")
-	// var teacher Teacher
-	// db.Where("username = ?", username).First(&teacher)
-	// if teacher.Username != "" {
-	// 	c.JSON(200, teacher)
-	// } else {
-	// 	c.JSON(404, gin.H{"error": "Teacher not found"})
-	// }
-}
-
-func UpdateTeacher(c *gin.Context) {
-	db := InitDb()
-	defer db.Close()
-	username := c.Params.ByName("Username")
-	var teacher Teacher
-	db.Where("username = ?", username).First(&teacher)
-	var newTeacher Teacher
-	c.Bind(&newTeacher)
-	result := Teacher{
-		Username:    teacher.Username,
-		FirstName:   newTeacher.FirstName,
-		LastName:    newTeacher.LastName,
-		Email:       newTeacher.Email,
-		PhoneNumber: newTeacher.PhoneNumber,
+	username := c.Query("id")
+	scope := c.Query("scope")
+	var appointments []Appointment
+	switch scope {
+	case "day":
+		date := getDateString(scope, 0)
+		db.Where("parent_id = ? AND date = ?", username, date).Find(&appointments)
+	case "week":
+		date := getDateString(scope, 0)
+		db.Raw("SELECT * FROM appointments WHERE (parent_id = ? AND date in ('"+date+"'))", username).Find(&appointments)
+		//db.Where("teacher_id = ? AND date in (?)", username, date).Find(&appointments)
 	}
-	db.Save(&result)
-	c.JSON(200, gin.H{"success": result})
+	for i := 0; i < len(appointments); i++ {
+		row := db.Table("teachers t").Select("Concat(t.first_name, ' ', t.last_name) as Name").Where("t.username = ?", appointments[i].TeacherID).Row()
+		row.Scan(&appointments[i].ParentID)
+	}
+	c.JSON(http.StatusOK, appointments)
 }
 
-func DeleteTeacher(c *gin.Context) {
+func GetParentStudents(c *gin.Context) {
 	db := InitDb()
 	defer db.Close()
-	username := c.Params.ByName("Username")
-	var teacher Teacher
-	db.Where("username = ?", username).First(&teacher)
-	if teacher.Username != "" {
-		db.Delete(&teacher)
-		c.JSON(200, gin.H{"success": "Teacher with Username " + teacher.Username + " deleted"})
-	} else {
-		c.JSON(404, gin.H{"error": "Teacher not found"})
-	}
+	username := c.Query("id")
+	var students []Student
+	db.Table("students s, parent_ofs po").Where("po.parent_id = ? and po.student_id = s.username", username).Find(&students)
+	c.JSON(http.StatusOK, students)
 }
 
-func getDateString(scope string) string {
+func GetParentPayments(c *gin.Context) {
+	db := InitDb()
+	defer db.Close()
+	username := c.Query("id")
+	var payments []Payment
+	db.Where("parent_id = ?", username).Find(&payments)
+	c.JSON(http.StatusOK, payments)
+}
+
+func getDateString(scope string, offset int) string {
 	if scope == "day" {
-		dateString := time.Now().Format("02-01-2006")
+		dateString := time.Now().AddDate(0, 0, offset).Format("02-01-2006")
 		return dateString
 	}
 	if scope == "week" {
@@ -380,193 +415,6 @@ func getDateString(scope string) string {
 		return dateString
 	}
 	return ""
-}
-
-func PostParent(c *gin.Context) {
-	// db := InitDb()
-	// defer db.Close()
-	// var parent Parent
-	// c.Bind(&parent)
-	// db.Create(&parent)
-	// c.JSON(201, gin.H{"success": parent})
-}
-
-func GetParents(c *gin.Context) {
-	// db := InitDb()
-	// defer db.Close()
-	// var parents []Parent
-	// db.Find(&parents)
-	// c.JSON(200, parents)
-}
-
-func GetParent(c *gin.Context) {
-	// db := InitDb()
-	// defer db.Close()
-	// id := c.Params.ByName("id")
-	// var parent Parent
-	// db.First(&parent, id)
-	// if parent.ID != "" {
-	// 	c.JSON(200, parent)
-	// } else {
-	// 	c.JSON(404, gin.H{"error": "Parent not found"})
-	// }
-}
-
-func UpdateParent(c *gin.Context) {
-	// db := InitDb()
-	// defer db.Close()
-	// id := c.Params.ByName("id")
-	// var parent Parent
-	// db.First(&parent, id)
-	// var newParent Parent
-	// c.Bind(&newParent)
-	// result := Parent{
-	// 	ID:          parent.ID,
-	// 	Firstname:   newParent.Firstname,
-	// 	Lastname:    newParent.Lastname,
-	// 	Email:       newParent.Email,
-	// 	Username:    newParent.Username,
-	// 	Password:    newParent.Password,
-	// 	PhoneNumber: newParent.PhoneNumber,
-	// }
-	// db.Save(&result)
-	// c.JSON(200, gin.H{"success": result})
-}
-
-func DeleteParent(c *gin.Context) {
-	// db := InitDb()
-	// defer db.Close()
-	// id := c.Params.ByName("id")
-	// var parent Parent
-	// db.First(&parent, id)
-	// if parent.ID != "" {
-	// 	db.Delete(&parent)
-	// 	c.JSON(200, gin.H{"success": "Parent #" + id + " deleted"})
-	// } else {
-	// 	c.JSON(404, gin.H{"error": "Parent not found"})
-	// }
-}
-
-func PostSubject(c *gin.Context) {
-	// db := InitDb()
-	// defer db.Close()
-	// var subject Subject
-	// c.Bind(&subject)
-	// db.Create(&subject)
-	// c.JSON(201, gin.H{"success": subject})
-}
-
-func GetSubjects(c *gin.Context) {
-	// db := InitDb()
-	// defer db.Close()
-	// var subjects []Subject
-	// db.Find(&subjects)
-	// c.JSON(200, subjects)
-}
-
-func GetSubject(c *gin.Context) {
-	// db := InitDb()
-	// defer db.Close()
-	// id := c.Params.ByName("id")
-	// var subject Subject
-	// db.First(&subject, id)
-	// if subject.ID != 0 {
-	// 	c.JSON(200, subject)
-	// } else {
-	// 	c.JSON(404, gin.H{"error": "Subject not found"})
-	// }
-}
-
-func UpdateSubject(c *gin.Context) {
-	// db := InitDb()
-	// defer db.Close()
-	// id := c.Params.ByName("id")
-	// var subject Subject
-	// db.First(&subject, id)
-	// var newSubject Subject
-	// c.Bind(&newSubject)
-	// result := Subject{
-	// 	ID:    subject.ID,
-	// 	Name:  newSubject.Name,
-	// 	Class: newSubject.Class,
-	// }
-	// db.Save(&result)
-	// c.JSON(200, gin.H{"success": result})
-}
-
-func DeleteSubject(c *gin.Context) {
-	// db := InitDb()
-	// defer db.Close()
-	// id := c.Params.ByName("id")
-	// var subject Subject
-	// db.First(&subject, id)
-	// if subject.ID != 0 {
-	// 	db.Delete(&subject)
-	// 	c.JSON(200, gin.H{"success": "Subject #" + id + " deleted"})
-	// } else {
-	// 	c.JSON(404, gin.H{"error": "Subject not found"})
-	// }
-}
-
-func PostClass(c *gin.Context) {
-	// db := InitDb()
-	// defer db.Close()
-	// var class Class
-	// c.Bind(&class)
-	// db.Create(&class)
-	// c.JSON(201, gin.H{"success": class})
-}
-
-func GetClasses(c *gin.Context) {
-	// db := InitDb()
-	// defer db.Close()
-	// var classes []Class
-	// db.Find(&classes)
-	// c.JSON(200, classes)
-}
-
-func GetClass(c *gin.Context) {
-	// db := InitDb()
-	// defer db.Close()
-	// id := c.Params.ByName("id")
-	// var class Class
-	// db.First(&class, id)
-	// if class.ID != 0 {
-	// 	c.JSON(200, class)
-	// } else {
-	// 	c.JSON(404, gin.H{"error": "Class not found"})
-	// }
-}
-
-func UpdateClass(c *gin.Context) {
-	// db := InitDb()
-	// defer db.Close()
-	// id := c.Params.ByName("id")
-	// var class Class
-	// db.First(&class, id)
-	// var newClass Class
-	// c.Bind(&newClass)
-	// result := Class{
-	// 	ID:       class.ID,
-	// 	Name:     newClass.Name,
-	// 	Location: newClass.Location,
-	// }
-	// db.Save(&result)
-	// c.JSON(200, gin.H{"success": result})
-}
-
-func DeleteClass(c *gin.Context) {
-	// db := InitDb()
-	// defer db.Close()
-	// id := c.Params.ByName("id")
-	// var class Class
-	// db.First(&class, id)
-	// if class.ID != 0 {
-	// 	db.Delete(&class)
-	// 	c.JSON(200, gin.H{"success": "Class #" + id + " deleted"})
-	// } else {
-	// 	c.JSON(404, gin.H{"error": "Class not found"})
-	// }
 }
 
 func OptionsUser(c *gin.Context) {
