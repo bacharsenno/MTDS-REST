@@ -62,7 +62,7 @@ type Student struct {
 type Grade struct {
 	TeacherID string `form:"TeacherID" json:"TeacherID"`
 	StudentID string `form:"StudentID" json:"StudentID"`
-	SubjectID int    `form:"SubjectID" json:"SubjectID"`
+	Subject   string `form:"Subject" json:"Subject"`
 	Year      string `form:"Year" json:"Year"`
 	Date      string `form:"Date" json:"Date"`
 	Grade     int    `form:"Grade" json:"Grade"`

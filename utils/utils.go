@@ -2,6 +2,7 @@ package utils
 
 import (
 	"MTDS-REST/model"
+	"math/rand"
 	"net/http"
 	"strconv"
 	s "strings"
@@ -23,6 +24,7 @@ type Schedule = model.Schedule
 type Appointment = model.Appointment
 type ClassSchedule = model.ClassSchedule
 type Payment = model.Payment
+type Grade = model.Grade
 
 // type Class = model.Class
 
@@ -50,6 +52,8 @@ func SetupRoutes() {
 		teacher.GET("/appointments", GetTeacherAppointments)
 		teacher.GET("/agenda", GetTeacherAgenda)
 		teacher.GET("/classes", GetTeacherClasses)
+		teacher.GET("/grades", GetTeacherClassGrades)
+		teacher.POST("/grades", PostTeacherClassGrades)
 	}
 
 	parent := R.Group("api/v1/parent")
@@ -58,6 +62,16 @@ func SetupRoutes() {
 		parent.GET("/appointments", GetParentAppointments)
 		parent.GET("/students", GetParentStudents)
 		parent.GET("/payments", GetParentPayments)
+	}
+
+	class := R.Group("api/v1/class")
+	{
+		class.GET("/students", GetClassStudents)
+	}
+
+	student := R.Group("api/v1/student")
+	{
+		student.GET("/grades", GetStudentGrades)
 	}
 
 	test := R.Group("api/v1/test")
@@ -243,6 +257,22 @@ func GenerateTestData(c *gin.Context) {
 			m++
 		}
 	}
+	s1 := rand.NewSource(time.Now().UnixNano())
+	r1 := rand.New(s1)
+	for i := 1; i <= 200; i++ {
+		for j := 1; j <= 10; j++ {
+			grade := Grade{
+				TeacherID: "T" + strconv.Itoa(j),
+				StudentID: "S" + strconv.Itoa(i),
+				Subject:   "SubjectName" + strconv.Itoa(j),
+				Year:      "2018",
+				Date:      time.Now().Format("02-01-2006"),
+				Grade:     r1.Intn(99) + 1,
+				Remarks:   "REMARK STUDENT S" + strconv.Itoa(i) + " BY TEACHER T" + strconv.Itoa(j),
+			}
+			db.Create(&grade)
+		}
+	}
 }
 
 func PostLogin(c *gin.Context) {
@@ -313,16 +343,21 @@ func GetTeacherAgenda(c *gin.Context) {
 	db := InitDb()
 	defer db.Close()
 	username := c.Query("id")
+	class := c.Query("class")
 	scope := c.Query("scope")
 	var teachClasses []TeachClass
 	var schedules []Schedule
 	var classSchedules []ClassSchedule
 	currentDay := time.Now().Weekday().String()
+	condition := ""
+	if class != "" {
+		condition = " and tc.class_id = '" + class + "'"
+	}
 	if scope == "day" {
-		db.Table("teach_classes tc, schedules s").Where("tc.teacher_id = ? and tc.schedule_id = s.schedule_id and s.day = ?", username, currentDay).Find(&teachClasses)
+		db.Table("teach_classes tc, schedules s").Where("tc.teacher_id = ? and tc.schedule_id = s.schedule_id and s.day = ?"+condition, username, currentDay).Find(&teachClasses)
 	}
 	if scope == "week" {
-		db.Where("teacher_id = ?", username).Find(&teachClasses)
+		db.Table("teach_classes tc").Where("tc.teacher_id = ?"+condition, username).Find(&teachClasses)
 	}
 	for i := 0; i < len(teachClasses); i++ {
 		if scope == "day" {
@@ -344,8 +379,39 @@ func GetTeacherClasses(c *gin.Context) {
 	defer db.Close()
 	var classes []TeachClass
 	username := c.Query("id")
-	db.Where("teacher_id = ?", username).Find(&classes)
+	class := c.Query("class")
+	if class != "" {
+		db.Where("teacher_id = ? AND class_id = ?", username, class).Find(&classes)
+	} else {
+		db.Where("teacher_id = ?", username).Find(&classes)
+	}
 	c.JSON(http.StatusOK, classes)
+}
+
+func GetTeacherClassGrades(c *gin.Context) {
+	db := InitDb()
+	defer db.Close()
+	id := c.Query("id")
+	class := c.Query("class")
+	subject := c.Query("subject")
+	condition := ""
+	if subject != "" {
+		condition = " and g.subject = '" + subject + "'"
+	}
+	var grades []Grade
+	db.Table("grades g, students s").Where("g.student_id = s.username and s.class_id = ? and g.teacher_id = ? "+condition, class, id).Find(&grades)
+	c.JSON(http.StatusOK, grades)
+}
+
+func PostTeacherClassGrades(c *gin.Context) {
+	db := InitDb()
+	defer db.Close()
+	var grades []Grade
+	c.Bind(&grades)
+	for i := 0; i < len(grades); i++ {
+		db.Create(&grades[i])
+	}
+	c.JSON(http.StatusOK, grades)
 }
 
 func GetParentNotifications(c *gin.Context) {
@@ -395,6 +461,24 @@ func GetParentPayments(c *gin.Context) {
 	var payments []Payment
 	db.Where("parent_id = ?", username).Find(&payments)
 	c.JSON(http.StatusOK, payments)
+}
+
+func GetClassStudents(c *gin.Context) {
+	db := InitDb()
+	defer db.Close()
+	class := c.Query("class")
+	var students []Student
+	db.Where("class_id = ?", class).Find(&students)
+	c.JSON(http.StatusOK, students)
+}
+
+func GetStudentGrades(c *gin.Context) {
+	db := InitDb()
+	defer db.Close()
+	id := c.Query("id")
+	var grades []Grade
+	db.Where("student_id = ?", id).Find(&grades)
+	c.JSON(http.StatusOK, grades)
 }
 
 func getDateString(scope string, offset int) string {
