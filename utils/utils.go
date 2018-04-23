@@ -2,6 +2,7 @@ package utils
 
 import (
 	"MTDS-REST/model"
+	"math"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -12,6 +13,8 @@ import (
 )
 
 var R = gin.Default()
+
+//Mon Jan 2 15:04:05 MST 2006
 
 type User = model.User
 type Teacher = model.Teacher
@@ -54,6 +57,8 @@ func SetupRoutes() {
 		teacher.GET("/classes", GetTeacherClasses)
 		teacher.GET("/grades", GetTeacherClassGrades)
 		teacher.POST("/grades", PostTeacherClassGrades)
+		teacher.POST("/info", PostTeacherInfo)
+		teacher.POST("/appointments", PostTeacherAppointment)
 	}
 
 	parent := R.Group("api/v1/parent")
@@ -62,6 +67,9 @@ func SetupRoutes() {
 		parent.GET("/appointments", GetParentAppointments)
 		parent.GET("/students", GetParentStudents)
 		parent.GET("/payments", GetParentPayments)
+		parent.POST("/info", PostParentInfo)
+		parent.POST("/appointments", PostParentAppointment)
+		parent.POST("/payments", PostParentPayment)
 	}
 
 	class := R.Group("api/v1/class")
@@ -72,6 +80,7 @@ func SetupRoutes() {
 	student := R.Group("api/v1/student")
 	{
 		student.GET("/grades", GetStudentGrades)
+		student.POST("/info", PostStudentInfo)
 	}
 
 	test := R.Group("api/v1/test")
@@ -83,14 +92,24 @@ func SetupRoutes() {
 func GenerateTestData(c *gin.Context) {
 	db := InitDb()
 	defer db.Close()
+	s1 := rand.NewSource(time.Now().UnixNano())
+	r1 := rand.New(s1)
 	for i := 1; i <= 10; i++ {
+		Dob := time.Now()
+		if i < 10 {
+			date := "12-0" + strconv.Itoa(i) + "-1985"
+			Dob, _ = time.Parse("02-01-2006", date)
+		} else {
+			date := "12-" + strconv.Itoa(i) + "-1985"
+			Dob, _ = time.Parse("02-01-2006", date)
+		}
 		teacher := Teacher{
 			Username:         "T" + strconv.Itoa(i),
 			FirstName:        "TFirstName" + strconv.Itoa(i),
 			LastName:         "TLastName" + strconv.Itoa(i),
 			Email:            "TEmail" + strconv.Itoa(i),
 			PhoneNumber:      "TPhoneNumber" + strconv.Itoa(i),
-			DateOfBirth:      "TDoB" + strconv.Itoa(i),
+			DateOfBirth:      Dob,
 			PlaceOfBirth:     "TPoB" + strconv.Itoa(i),
 			Nationality:      "TNationality" + strconv.Itoa(i),
 			Address:          "TAddr" + strconv.Itoa(i),
@@ -100,8 +119,7 @@ func GenerateTestData(c *gin.Context) {
 			GradGrade:        "TGradGrade" + strconv.Itoa(i),
 			GradSchool:       "TGradSchool" + strconv.Itoa(i),
 			SeniorityLevel:   "TSenLevel" + strconv.Itoa(i),
-			StartDate:        "TStartDate" + strconv.Itoa(i),
-			EndDate:          "TEndDate" + strconv.Itoa(i),
+			StartDate:        time.Now().AddDate(0, -1, 0),
 			Status:           "1",
 		}
 		user := User{
@@ -133,6 +151,7 @@ func GenerateTestData(c *gin.Context) {
 		db.Create(&user)
 	}
 	k := 1
+	date, _ := time.Parse("02-01-2006", "01-01-2000")
 	for i := 1; i <= 10; i++ {
 		for j := 1; j <= 20; j++ {
 			student := Student{
@@ -142,14 +161,13 @@ func GenerateTestData(c *gin.Context) {
 				Email:        "SEmail" + strconv.Itoa(k),
 				PhoneNumber:  "SPhoneNumber" + strconv.Itoa(k),
 				ClassID:      "C" + strconv.Itoa(i),
-				GPA:          "80.0",
+				GPA:          truncate(r1.Float64()*99+1, 1),
 				Nationality:  "SNationality" + strconv.Itoa(k),
-				DateOfBirth:  "SDoB" + strconv.Itoa(k),
+				DateOfBirth:  date,
 				PlaceOfBirth: "SPoB" + strconv.Itoa(k),
 				Address:      "SAddress" + strconv.Itoa(k),
 				FiscalCode:   "SFiscCode" + strconv.Itoa(k),
-				EnrolledDate: "SEnrollDate" + strconv.Itoa(k),
-				EndDate:      "SEndDate" + strconv.Itoa(k),
+				EnrolledDate: date.AddDate(3, 0, 0),
 				Status:       "1",
 			}
 			db.Create(&student)
@@ -205,8 +223,8 @@ func GenerateTestData(c *gin.Context) {
 			Title:         "NTITLE" + strconv.Itoa(i),
 			Description:   "NDESCRIPTION" + strconv.Itoa(i),
 			Priority:      strconv.Itoa(i),
-			StartDate:     "NStartDate" + strconv.Itoa(i),
-			EndDate:       "NEndDate" + strconv.Itoa(i),
+			StartDate:     time.Now(),
+			EndDate:       time.Now().AddDate(0, 1, 0),
 			Status:        "1",
 		}
 		db.Create(&notification)
@@ -228,18 +246,32 @@ func GenerateTestData(c *gin.Context) {
 			db.Create(&schedule)
 		}
 	}
-	for i := 1; i <= 5; i++ {
+	for i := 1; i <= 4; i++ {
 		appointment := Appointment{
 			AppointmentID: i,
 			TeacherID:     "T1",
 			ParentID:      "P" + strconv.Itoa(i),
-			Date:          getDateString("day", i-1),
 			FullDay:       false,
-			StartTime:     strconv.Itoa(i + 12),
-			EndTime:       strconv.Itoa(i + 13),
+			StartTime:     time.Now().AddDate(0, 0, i-1),
+			EndTime:       time.Now().AddDate(0, 0, i-1).Add(time.Hour),
+			Status:        1,
+			StatusTeacher: 1,
+			StatusParent:  1,
 		}
 		db.Create(&appointment)
 	}
+	appointment := Appointment{
+		AppointmentID: 5,
+		TeacherID:     "T1",
+		ParentID:      "P" + strconv.Itoa(5),
+		StartTime:     time.Now().AddDate(0, 0, 4),
+		EndTime:       time.Now().AddDate(0, 0, 4),
+		FullDay:       true,
+		Status:        1,
+		StatusTeacher: 1,
+		StatusParent:  1,
+	}
+	db.Create(&appointment)
 	m := 1
 	for i := 1; i <= 5; i++ {
 		for j := 1; j <= 2; j++ {
@@ -247,9 +279,8 @@ func GenerateTestData(c *gin.Context) {
 				PaymentID:   "PID" + strconv.Itoa(m),
 				ParentID:    "P" + strconv.Itoa(i),
 				StudentID:   "S" + strconv.Itoa(m),
-				Amount:      "100,000",
-				Deadline:    "PayDeadline" + strconv.Itoa(m),
-				CreatedOn:   "PayCreated" + strconv.Itoa(m),
+				Amount:      truncate(r1.Float64()*1000+1000, 2),
+				Deadline:    time.Now().AddDate(0, 1, 0),
 				Status:      strconv.Itoa(j),
 				Description: "PayDesc" + strconv.Itoa(m),
 			}
@@ -257,17 +288,15 @@ func GenerateTestData(c *gin.Context) {
 			m++
 		}
 	}
-	s1 := rand.NewSource(time.Now().UnixNano())
-	r1 := rand.New(s1)
 	for i := 1; i <= 200; i++ {
 		for j := 1; j <= 10; j++ {
 			grade := Grade{
 				TeacherID: "T" + strconv.Itoa(j),
 				StudentID: "S" + strconv.Itoa(i),
 				Subject:   "SubjectName" + strconv.Itoa(j),
-				Year:      "2018",
-				Date:      time.Now().Format("02-01-2006"),
-				Grade:     r1.Intn(99) + 1,
+				Year:      time.Now().Year(),
+				Date:      time.Now(),
+				Grade:     truncate(r1.Float64()*99+1, 1),
 				Remarks:   "REMARK STUDENT S" + strconv.Itoa(i) + " BY TEACHER T" + strconv.Itoa(j),
 			}
 			db.Create(&grade)
@@ -313,7 +342,7 @@ func GetTeacherNotifications(c *gin.Context) {
 	defer db.Close()
 	username := c.Query("id")
 	var notifications []Notification
-	db.Where("destination_id in ('ALL', 'TEACHERS', ?)", username).Find(&notifications)
+	db.Where("destination_id in ('ALL', 'TEACHERS', ?) AND start_date < ? AND end_date > ?", username, time.Now(), time.Now()).Find(&notifications)
 	c.JSON(http.StatusOK, notifications)
 }
 
@@ -322,15 +351,18 @@ func GetTeacherAppointments(c *gin.Context) {
 	defer db.Close()
 	username := c.Query("id")
 	scope := c.Query("scope")
+	if scope == "" {
+		scope = "week"
+	}
 	var appointments []Appointment
 	switch scope {
 	case "day":
 		date := getDateString(scope, 0)
-		db.Where("teacher_id = ? AND date = ?", username, date).Find(&appointments)
+		db.Where("teacher_id = ? AND date(start_time) = ?", username, date).Find(&appointments)
 	case "week":
-		date := getDateString(scope, 0)
-		db.Raw("SELECT * FROM appointments WHERE (teacher_id = ? AND date in ('"+date+"'))", username).Find(&appointments)
-		//db.Where("teacher_id = ? AND date in (?)", username, date).Find(&appointments)
+		today := getDateString("day", 0)
+		week := getDateString("day", 7)
+		db.Where("teacher_id = ? AND date(start_time) >= ? and date(start_time) <= ?", username, today, week).Find(&appointments)
 	}
 	for i := 0; i < len(appointments); i++ {
 		row := db.Table("parents p").Select("Concat(p.first_name, ' ', p.last_name) as Name").Where("p.username = ?", appointments[i].ParentID).Row()
@@ -345,6 +377,9 @@ func GetTeacherAgenda(c *gin.Context) {
 	username := c.Query("id")
 	class := c.Query("class")
 	scope := c.Query("scope")
+	if scope == "" {
+		scope = "week"
+	}
 	var teachClasses []TeachClass
 	var schedules []Schedule
 	var classSchedules []ClassSchedule
@@ -414,12 +449,30 @@ func PostTeacherClassGrades(c *gin.Context) {
 	c.JSON(http.StatusOK, grades)
 }
 
+func PostTeacherInfo(c *gin.Context) {
+	db := InitDb()
+	defer db.Close()
+	var teacher Teacher
+	c.Bind(&teacher)
+	db.Save(&teacher)
+	c.JSON(http.StatusOK, teacher)
+}
+
+func PostTeacherAppointment(c *gin.Context) {
+	db := InitDb()
+	defer db.Close()
+	var appointment Appointment
+	c.Bind(&appointment)
+	db.Save(&appointment)
+	c.JSON(http.StatusOK, appointment)
+}
+
 func GetParentNotifications(c *gin.Context) {
 	db := InitDb()
 	defer db.Close()
 	username := c.Query("id")
 	var notifications []Notification
-	db.Where("destination_id in ('ALL', 'PARENTS', ?)", username).Find(&notifications)
+	db.Where("destination_id in ('ALL', 'PARENTS', ?) AND start_date < ? AND end_date > ?", username, time.Now(), time.Now()).Find(&notifications)
 	c.JSON(http.StatusOK, notifications)
 }
 
@@ -428,15 +481,18 @@ func GetParentAppointments(c *gin.Context) {
 	defer db.Close()
 	username := c.Query("id")
 	scope := c.Query("scope")
+	if scope == "" {
+		scope = "week"
+	}
 	var appointments []Appointment
 	switch scope {
 	case "day":
 		date := getDateString(scope, 0)
-		db.Where("parent_id = ? AND date = ?", username, date).Find(&appointments)
+		db.Where("parent_id = ? AND date(start_time) = ?", username, date).Find(&appointments)
 	case "week":
-		date := getDateString(scope, 0)
-		db.Raw("SELECT * FROM appointments WHERE (parent_id = ? AND date in ('"+date+"'))", username).Find(&appointments)
-		//db.Where("teacher_id = ? AND date in (?)", username, date).Find(&appointments)
+		today := getDateString("day", 0)
+		week := getDateString("day", 7)
+		db.Where("parent_id = ? AND date(start_time) >= ? and date(start_time) <= ?", username, today, week).Find(&appointments)
 	}
 	for i := 0; i < len(appointments); i++ {
 		row := db.Table("teachers t").Select("Concat(t.first_name, ' ', t.last_name) as Name").Where("t.username = ?", appointments[i].TeacherID).Row()
@@ -463,6 +519,33 @@ func GetParentPayments(c *gin.Context) {
 	c.JSON(http.StatusOK, payments)
 }
 
+func PostParentInfo(c *gin.Context) {
+	db := InitDb()
+	defer db.Close()
+	var parent Parent
+	c.Bind(&parent)
+	db.Save(&parent)
+	c.JSON(http.StatusOK, parent)
+}
+
+func PostParentAppointment(c *gin.Context) {
+	db := InitDb()
+	defer db.Close()
+	var appointment Appointment
+	c.Bind(&appointment)
+	db.Save(&appointment)
+	c.JSON(http.StatusOK, appointment)
+}
+
+func PostParentPayment(c *gin.Context) {
+	db := InitDb()
+	defer db.Close()
+	var payment Payment
+	c.Bind(&payment)
+	db.Save(&payment)
+	c.JSON(http.StatusOK, payment)
+}
+
 func GetClassStudents(c *gin.Context) {
 	db := InitDb()
 	defer db.Close()
@@ -481,9 +564,18 @@ func GetStudentGrades(c *gin.Context) {
 	c.JSON(http.StatusOK, grades)
 }
 
+func PostStudentInfo(c *gin.Context) {
+	db := InitDb()
+	defer db.Close()
+	var student Student
+	c.Bind(&student)
+	db.Save(&student)
+	c.JSON(http.StatusOK, student)
+}
+
 func getDateString(scope string, offset int) string {
 	if scope == "day" {
-		dateString := time.Now().AddDate(0, 0, offset).Format("02-01-2006")
+		dateString := time.Now().AddDate(0, 0, offset).Format("2006-01-02")
 		return dateString
 	}
 	if scope == "week" {
@@ -499,6 +591,10 @@ func getDateString(scope string, offset int) string {
 		return dateString
 	}
 	return ""
+}
+
+func truncate(x float64, n int) float64 {
+	return math.Floor(x*math.Pow(10, float64(n))) * math.Pow(10, -float64(n))
 }
 
 func OptionsUser(c *gin.Context) {
