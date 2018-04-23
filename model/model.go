@@ -47,7 +47,7 @@ type Parent struct {
 
 type Student struct {
 	Username     string    `gorm:"PRIMARY_KEY" form:"Username" json:"Username"`
-	FirstName    string    `gorm:"not null" form:"FirstName" json:"FirstName "`
+	FirstName    string    `gorm:"not null" form:"FirstName" json:"FirstName"`
 	LastName     string    `gorm:"not null" form:"LastName" json:"LastName"`
 	Email        string    `gorm:"not null" form:"Email" json:"Email"`
 	PhoneNumber  string    `gorm:"not null" form:"PhoneNumber" json:"PhoneNumber"`
