@@ -142,6 +142,11 @@ type ClassSchedule struct {
 	Time       []Schedule `form:"Schedule" json:"Schedule"`
 }
 
+type GradeWithName struct {
+	Grade `form:"Grade" json:"Grade"`
+	Name  string `form:"Name" json:"Name"`
+}
+
 func InitDb() *gorm.DB {
 	// Openning file
 	db, err := gorm.Open("mysql", "root:@/testdb?parseTime=True")

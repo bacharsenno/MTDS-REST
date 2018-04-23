@@ -28,6 +28,7 @@ type Appointment = model.Appointment
 type ClassSchedule = model.ClassSchedule
 type Payment = model.Payment
 type Grade = model.Grade
+type GradeWithName = model.GradeWithName
 
 // type Class = model.Class
 
@@ -435,7 +436,19 @@ func GetTeacherClassGrades(c *gin.Context) {
 	}
 	var grades []Grade
 	db.Table("grades g, students s").Where("g.student_id = s.username and s.class_id = ? and g.teacher_id = ? "+condition, class, id).Find(&grades)
-	c.JSON(http.StatusOK, grades)
+	var gradesWithNames []GradeWithName
+	var temp GradeWithName
+	var name string
+	for i := 0; i < len(grades); i++ {
+		row := db.Table("students s").Select("Concat(s.first_name, ' ', s.last_name) as Name").Where("s.username = ?", grades[i].StudentID).Row()
+		row.Scan(&name)
+		temp = GradeWithName{
+			Grade: grades[i],
+			Name:  name,
+		}
+		gradesWithNames = append(gradesWithNames, temp)
+	}
+	c.JSON(http.StatusOK, gradesWithNames)
 }
 
 func PostTeacherClassGrades(c *gin.Context) {
