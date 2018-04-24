@@ -29,6 +29,7 @@ type ClassSchedule = model.ClassSchedule
 type Payment = model.Payment
 type Grade = model.Grade
 type GradeWithName = model.GradeWithName
+type StudentWithGrade = model.StudentWithGrade
 
 // type Class = model.Class
 
@@ -436,19 +437,39 @@ func GetTeacherClassGrades(c *gin.Context) {
 	}
 	var grades []Grade
 	db.Table("grades g, students s").Where("g.student_id = s.username and s.class_id = ? and g.teacher_id = ? "+condition, class, id).Find(&grades)
-	var gradesWithNames []GradeWithName
-	var temp GradeWithName
-	var name string
-	for i := 0; i < len(grades); i++ {
-		row := db.Table("students s").Select("Concat(s.first_name, ' ', s.last_name) as Name").Where("s.username = ?", grades[i].StudentID).Row()
-		row.Scan(&name)
-		temp = GradeWithName{
-			Grade: grades[i],
-			Name:  name,
-		}
-		gradesWithNames = append(gradesWithNames, temp)
+	object := c.Query("object")
+	if object == "" {
+		object = "grade"
 	}
-	c.JSON(http.StatusOK, gradesWithNames)
+	if object == "grade" {
+		var gradesWithNames []GradeWithName
+		var temp GradeWithName
+		var firstname string
+		var lastname string
+		for i := 0; i < len(grades); i++ {
+			row := db.Table("students s").Select("s.first_name as firstname, s.last_name as lastname").Where("s.username = ?", grades[i].StudentID).Row()
+			row.Scan(&firstname, &lastname)
+			temp = GradeWithName{
+				Grade:     grades[i],
+				FirstName: firstname,
+				LastName:  lastname,
+			}
+			gradesWithNames = append(gradesWithNames, temp)
+		}
+		c.JSON(http.StatusOK, gradesWithNames)
+	} else if object == "student" {
+		var studentsWithGrades []StudentWithGrade
+		var temp Student
+		for i := 0; i < len(grades); i++ {
+			db.Where("username = ?", grades[i].StudentID).First(&temp)
+			temp2 := StudentWithGrade{
+				Student: temp,
+				Grade:   grades[i],
+			}
+			studentsWithGrades = append(studentsWithGrades, temp2)
+		}
+		c.JSON(http.StatusOK, studentsWithGrades)
+	}
 }
 
 func PostTeacherClassGrades(c *gin.Context) {

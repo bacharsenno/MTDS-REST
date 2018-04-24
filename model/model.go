@@ -143,8 +143,14 @@ type ClassSchedule struct {
 }
 
 type GradeWithName struct {
-	Grade `form:"Grade" json:"Grade"`
-	Name  string `form:"Name" json:"Name"`
+	Grade     `form:"Grade" json:"Grade"`
+	FirstName string `form:"FirstName" json:"FirstName"`
+	LastName  string `form:"LastName" json:"LastName"`
+}
+
+type StudentWithGrade struct {
+	Student `form:"Student" json:"Student"`
+	Grade   `form:"Grade" json:"Grade"`
 }
 
 func InitDb() *gorm.DB {
