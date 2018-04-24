@@ -53,6 +53,7 @@ func SetupRoutes() {
 
 	teacher := R.Group("api/v1/teacher")
 	{
+		teacher.GET("/info", GetTeacherInfo)
 		teacher.GET("/notifications", GetTeacherNotifications)
 		teacher.GET("/appointments", GetTeacherAppointments)
 		teacher.GET("/agenda", GetTeacherAgenda)
@@ -65,6 +66,7 @@ func SetupRoutes() {
 
 	parent := R.Group("api/v1/parent")
 	{
+		parent.GET("/info", GetParentInfo)
 		parent.GET("/notifications", GetParentNotifications)
 		parent.GET("/appointments", GetParentAppointments)
 		parent.GET("/students", GetParentStudents)
@@ -81,6 +83,7 @@ func SetupRoutes() {
 
 	student := R.Group("api/v1/student")
 	{
+		student.GET("/info", GetStudentInfo)
 		student.GET("/grades", GetStudentGrades)
 		student.POST("/info", PostStudentInfo)
 	}
@@ -313,30 +316,23 @@ func PostLogin(c *gin.Context) {
 	c.Bind(&user)
 	username := user.Username
 	password := user.Password
-	if s.HasPrefix(username, "T") {
-		var loggedUser User
-		db.Where("username = ? AND password = ?", username, password).First(&loggedUser)
-		if loggedUser.Username != "" {
-			var teacher Teacher
-			db.Where("username = ?", username).First(&teacher)
-			c.JSON(http.StatusOK, teacher)
-		} else {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Username/Password combination not found"})
-		}
-	} else if s.HasPrefix(username, "P") {
-		var loggedUser User
-		db.Where("username = ? AND password = ?", username, password).First(&loggedUser)
-		if loggedUser.Username != "" {
-			var parent Parent
-			db.Where("username = ?", username).First(&parent)
-			//db.Joins("JOIN parent_ofs po on po.student_id = students.username").Where("po.parent_id = ?", username).Find(&students)
-			c.JSON(http.StatusOK, parent)
-		} else {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Username/Password combination not found"})
-		}
+	var dbUser User
+	db.Where("username = ? and password = ?", username, password).Find(&dbUser)
+	if dbUser.Username != "" {
+		dbUser.Password = ""
+		c.JSON(http.StatusOK, dbUser)
 	} else {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Invalid Username"})
+		c.String(http.StatusNotFound, "User Not Found")
 	}
+}
+
+func GetTeacherInfo(c *gin.Context) {
+	db := InitDb()
+	defer db.Close()
+	username := c.Query("id")
+	var teacher Teacher
+	db.Where("username = ?", username).First(&teacher)
+	c.JSON(http.StatusOK, teacher)
 }
 
 func GetTeacherNotifications(c *gin.Context) {
@@ -488,6 +484,15 @@ func PostTeacherInfo(c *gin.Context) {
 	defer db.Close()
 	var teacher Teacher
 	c.Bind(&teacher)
+	if teacher.Username == "" {
+		var lastTeacher Teacher
+		db.Limit(1).Order("LENGTH(username) desc, username desc").Find(&lastTeacher)
+		id := lastTeacher.Username
+		id = s.Trim(id, "T")
+		num, _ := strconv.Atoi(id)
+		num++
+		teacher.Username = "T" + strconv.Itoa(num)
+	}
 	db.Save(&teacher)
 	c.JSON(http.StatusOK, teacher)
 }
@@ -499,6 +504,15 @@ func PostTeacherAppointment(c *gin.Context) {
 	c.Bind(&appointment)
 	db.Save(&appointment)
 	c.JSON(http.StatusOK, appointment)
+}
+
+func GetParentInfo(c *gin.Context) {
+	db := InitDb()
+	defer db.Close()
+	username := c.Query("id")
+	var parent Parent
+	db.Where("username = ?", username).Find(&parent)
+	c.JSON(http.StatusOK, parent)
 }
 
 func GetParentNotifications(c *gin.Context) {
@@ -558,6 +572,15 @@ func PostParentInfo(c *gin.Context) {
 	defer db.Close()
 	var parent Parent
 	c.Bind(&parent)
+	if parent.Username == "" {
+		var lastParent Parent
+		db.Limit(1).Order("LENGTH(username) desc, username desc").Find(&lastParent)
+		id := lastParent.Username
+		id = s.Trim(id, "P")
+		num, _ := strconv.Atoi(id)
+		num++
+		parent.Username = "P" + strconv.Itoa(num)
+	}
 	db.Save(&parent)
 	c.JSON(http.StatusOK, parent)
 }
@@ -598,11 +621,29 @@ func GetStudentGrades(c *gin.Context) {
 	c.JSON(http.StatusOK, grades)
 }
 
+func GetStudentInfo(c *gin.Context) {
+	db := InitDb()
+	defer db.Close()
+	var student Student
+	id := c.Query("id")
+	db.Where("username = ?", id).First(&student)
+	c.JSON(http.StatusOK, student)
+}
+
 func PostStudentInfo(c *gin.Context) {
 	db := InitDb()
 	defer db.Close()
 	var student Student
 	c.Bind(&student)
+	if student.Username == "" {
+		var lastStudent Student
+		db.Limit(1).Order("LENGTH(username) desc, username desc").Find(&lastStudent)
+		id := lastStudent.Username
+		id = s.Trim(id, "S")
+		num, _ := strconv.Atoi(id)
+		num++
+		student.Username = "S" + strconv.Itoa(num)
+	}
 	db.Save(&student)
 	c.JSON(http.StatusOK, student)
 }
