@@ -16,6 +16,7 @@ type Teacher struct {
 	Username         string    `gorm:"PRIMARY_KEY" form:"Username" json:"Username"`
 	FirstName        string    `gorm:"not null" form:"FirstName" json:"FirstName"`
 	LastName         string    `gorm:"not null" form:"LastName" json:"LastName"`
+	ProfilePic       string    `form:"ProfilePic" json:"ProfilePic"`
 	Email            string    `gorm:"not null" form:"Email" json:"Email"`
 	PhoneNumber      string    `gorm:"not null" form:"PhoneNumber" json:"PhoneNumber"`
 	DateOfBirth      time.Time `form:"DateOfBirth" json:"DateOfBirth"`
@@ -49,6 +50,7 @@ type Student struct {
 	Username     string    `gorm:"PRIMARY_KEY" form:"Username" json:"Username"`
 	FirstName    string    `gorm:"not null" form:"FirstName" json:"FirstName"`
 	LastName     string    `gorm:"not null" form:"LastName" json:"LastName"`
+	ProfilePic   string    `form:"ProfilePic" json:"ProfilePic"`
 	Email        string    `gorm:"not null" form:"Email" json:"Email"`
 	PhoneNumber  string    `gorm:"not null" form:"PhoneNumber" json:"PhoneNumber"`
 	ClassID      string    `gorm:"not null" form:"ClassID" json:"ClassID"`
@@ -68,6 +70,19 @@ type Grade struct {
 	StudentID string    `form:"StudentID" json:"StudentID"`
 	Subject   string    `form:"Subject" json:"Subject"`
 	Year      int       `form:"Year" json:"Year"`
+	Semester  int       `form:"Semester" json:"Semester"`
+	Type      string    `form:"Type" json:"Type"`
+	Date      time.Time `form:"Date" json:"Date"`
+	Grade     float64   `form:"Grade" json:"Grade"`
+	Remarks   string    `form:"Remarks" json:"Remarks"`
+}
+
+type GradeSummary struct {
+	TeacherID string    `form:"TeacherID" json:"TeacherID"`
+	StudentID string    `form:"StudentID" json:"StudentID"`
+	Subject   string    `form:"Subject" json:"Subject"`
+	Year      int       `form:"Year" json:"Year"`
+	Semester  int       `form:"Semester" json:"Semester"`
 	Date      time.Time `form:"Date" json:"Date"`
 	Grade     float64   `form:"Grade" json:"Grade"`
 	Remarks   string    `form:"Remarks" json:"Remarks"`
@@ -142,6 +157,12 @@ type ClassSchedule struct {
 	Time       []Schedule `form:"Schedule" json:"Schedule"`
 }
 
+type BasicStudent struct {
+	FirstName  string `form:"FirstName" json:"FirstName"`
+	LastName   string `form:"LastName" json:"LastName"`
+	ProfilePic string `form:"ProfilePic" json:"ProfilePic"`
+}
+
 type GradeWithName struct {
 	Grade     `form:"Grade" json:"Grade"`
 	FirstName string `form:"FirstName" json:"FirstName"`
@@ -149,8 +170,20 @@ type GradeWithName struct {
 }
 
 type StudentWithGrade struct {
-	Student `form:"Student" json:"Student"`
-	Grade   `form:"Grade" json:"Grade"`
+	BasicStudent   `form:"BasicStudent" json:"BasicStudent"`
+	Grades         []Grade        `form:"Grade" json:"Grade"`
+	GradeSummaries []GradeSummary `form:"GradeSummary" json:"GradeSummary"`
+}
+
+type StudentGradesBySubject struct {
+	Subject        string         `form:"Subject" json:"Subject"`
+	Grades         []Grade        `form:"Grades" json:"Grades"`
+	GradeSummaries []GradeSummary `form:"GradeSummaries" json:"GradeSummaries"`
+}
+
+type StudentParentGrades struct {
+	BasicStudent  `form:"BasicStudent" json:"BasicStudent"`
+	SubjectGrades []StudentGradesBySubject `form:"SubjectGrades" json:"SubjectGrades"`
 }
 
 func InitDb() *gorm.DB {
@@ -187,6 +220,10 @@ func InitDb() *gorm.DB {
 	if !db.HasTable(&Grade{}) {
 		db.CreateTable(&Grade{})
 		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&Grade{})
+	}
+	if !db.HasTable(&GradeSummary{}) {
+		db.CreateTable(&GradeSummary{})
+		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&GradeSummary{})
 	}
 	if !db.HasTable(&Payment{}) {
 		db.CreateTable(&Payment{})

@@ -25,13 +25,16 @@ type ParentOf = model.ParentOf
 type Notification = model.Notification
 type Schedule = model.Schedule
 type Appointment = model.Appointment
-type ClassSchedule = model.ClassSchedule
 type Payment = model.Payment
 type Grade = model.Grade
+type GradeSummary = model.GradeSummary
+
+type ClassSchedule = model.ClassSchedule
 type GradeWithName = model.GradeWithName
 type StudentWithGrade = model.StudentWithGrade
-
-// type Class = model.Class
+type BasicStudent = model.BasicStudent
+type StudentParentGrades = model.StudentParentGrades
+type StudentGradesBySubject = model.StudentGradesBySubject
 
 var InitDb = model.InitDb
 
@@ -70,6 +73,7 @@ func SetupRoutes() {
 		parent.GET("/notifications", GetParentNotifications)
 		parent.GET("/appointments", GetParentAppointments)
 		parent.GET("/students", GetParentStudents)
+		parent.GET("/students/grades", GetParentStudentsGrades)
 		parent.GET("/payments", GetParentPayments)
 		parent.POST("/info", PostParentInfo)
 		parent.POST("/appointments", PostParentAppointment)
@@ -97,6 +101,10 @@ func SetupRoutes() {
 func GenerateTestData(c *gin.Context) {
 	db := InitDb()
 	defer db.Close()
+	pic := []string{"https://cdn4.iconfinder.com/data/icons/cool-avatars-2/190/00-17-512.png",
+		"https://www.teachngo.com/images/student_avatar.jpg"}
+	pic2 := []string{"https://off2class-sol5y8kuafeozy9kld6.netdna-ssl.com/wp-content/themes/stylish-child/assets/styles/images/student/teacher_first.png",
+		"https://pbs.twimg.com/profile_images/490643057822273537/pMkrGQPT_400x400.jpeg"}
 	s1 := rand.NewSource(time.Now().UnixNano())
 	r1 := rand.New(s1)
 	for i := 1; i <= 10; i++ {
@@ -112,6 +120,7 @@ func GenerateTestData(c *gin.Context) {
 			Username:         "T" + strconv.Itoa(i),
 			FirstName:        "TFirstName" + strconv.Itoa(i),
 			LastName:         "TLastName" + strconv.Itoa(i),
+			ProfilePic:       pic2[(i+1)%2],
 			Email:            "TEmail" + strconv.Itoa(i),
 			PhoneNumber:      "TPhoneNumber" + strconv.Itoa(i),
 			DateOfBirth:      Dob,
@@ -163,6 +172,7 @@ func GenerateTestData(c *gin.Context) {
 				Username:     "S" + strconv.Itoa(k),
 				FirstName:    "SFirstName" + strconv.Itoa(k),
 				LastName:     "SLastName" + strconv.Itoa(k),
+				ProfilePic:   pic[(k+1)%2],
 				Email:        "SEmail" + strconv.Itoa(k),
 				PhoneNumber:  "SPhoneNumber" + strconv.Itoa(k),
 				ClassID:      "C" + strconv.Itoa(i),
@@ -293,18 +303,72 @@ func GenerateTestData(c *gin.Context) {
 			m++
 		}
 	}
+	typeA := []string{"Homework", "Oral", "Quiz", "Exam"}
+	typeB := []string{"Homework", "Exam"}
+	t := 0
 	for i := 1; i <= 200; i++ {
 		for j := 1; j <= 10; j++ {
-			grade := Grade{
-				TeacherID: "T" + strconv.Itoa(j),
-				StudentID: "S" + strconv.Itoa(i),
-				Subject:   "SubjectName" + strconv.Itoa(j),
-				Year:      time.Now().Year(),
-				Date:      time.Now(),
-				Grade:     truncate(r1.Float64()*99+1, 1),
-				Remarks:   "REMARK STUDENT S" + strconv.Itoa(i) + " BY TEACHER T" + strconv.Itoa(j),
+			if i%2 != 0 {
+				for k := 1; k <= 20; k++ {
+					if k <= 3 || (k >= 11 && k < 13) {
+						t = 0
+					} else if (k > 3 && k <= 5) || (k > 12 && k < 16) {
+						t = 1
+					} else if (k > 5 && k <= 8) || (k > 15 && k < 18) {
+						t = 2
+					} else if (k > 8 && k <= 10) || k > 17 {
+						t = 3
+					}
+					grade := Grade{
+						TeacherID: "T" + strconv.Itoa(j),
+						StudentID: "S" + strconv.Itoa(i),
+						Subject:   "SubjectName" + strconv.Itoa(j),
+						Year:      time.Now().Year(),
+						Date:      time.Now().AddDate(0, (k-1)/5, 0),
+						Semester:  ((k - 1) / 10) + 1,
+						Type:      typeA[t],
+						Grade:     truncate(r1.Float64()*99+1, 1),
+						Remarks:   "REMARK STUDENT S" + strconv.Itoa(i) + " BY TEACHER T" + strconv.Itoa(j),
+					}
+					db.Create(&grade)
+				}
+			} else {
+				for k := 1; k <= 6; k++ {
+					t := 0
+					if k%3 == 0 {
+						t = 1
+					}
+					grade := Grade{
+						TeacherID: "T" + strconv.Itoa(j),
+						StudentID: "S" + strconv.Itoa(i),
+						Subject:   "SubjectName" + strconv.Itoa(j),
+						Year:      time.Now().Year(),
+						Date:      time.Now().AddDate(0, k-1, 0),
+						Semester:  (k-1)/3 + 1,
+						Type:      typeB[t],
+						Grade:     truncate(r1.Float64()*99+1, 1),
+						Remarks:   "REMARK STUDENT S" + strconv.Itoa(i) + " BY TEACHER T" + strconv.Itoa(j),
+					}
+					db.Create(&grade)
+				}
 			}
-			db.Create(&grade)
+		}
+	}
+	for i := 1; i <= 200; i++ {
+		for j := 1; j <= 10; j++ {
+			for k := 1; k <= 2; k++ {
+				gradeSummary := GradeSummary{
+					TeacherID: "T" + strconv.Itoa(j),
+					StudentID: "S" + strconv.Itoa(i),
+					Subject:   "SubjectName" + strconv.Itoa(j),
+					Year:      time.Now().Year(),
+					Date:      time.Now().AddDate(0, (k-1)*8, 0),
+					Semester:  k,
+					Grade:     truncate(r1.Float64()*99+1, 1),
+					Remarks:   "REMARK STUDENT S" + strconv.Itoa(i) + " BY TEACHER T" + strconv.Itoa(j),
+				}
+				db.Create(&gradeSummary)
+			}
 		}
 	}
 }
@@ -324,328 +388,6 @@ func PostLogin(c *gin.Context) {
 	} else {
 		c.String(http.StatusNotFound, "User Not Found")
 	}
-}
-
-func GetTeacherInfo(c *gin.Context) {
-	db := InitDb()
-	defer db.Close()
-	username := c.Query("id")
-	var teacher Teacher
-	db.Where("username = ?", username).First(&teacher)
-	c.JSON(http.StatusOK, teacher)
-}
-
-func GetTeacherNotifications(c *gin.Context) {
-	db := InitDb()
-	defer db.Close()
-	username := c.Query("id")
-	var notifications []Notification
-	db.Where("destination_id in ('ALL', 'TEACHERS', ?) AND start_date < ? AND end_date > ?", username, time.Now(), time.Now()).Find(&notifications)
-	c.JSON(http.StatusOK, notifications)
-}
-
-func GetTeacherAppointments(c *gin.Context) {
-	db := InitDb()
-	defer db.Close()
-	username := c.Query("id")
-	scope := c.Query("scope")
-	if scope == "" {
-		scope = "week"
-	}
-	var appointments []Appointment
-	switch scope {
-	case "day":
-		date := getDateString(scope, 0)
-		db.Where("teacher_id = ? AND date(start_time) = ?", username, date).Find(&appointments)
-	case "week":
-		today := getDateString("day", 0)
-		week := getDateString("day", 7)
-		db.Where("teacher_id = ? AND date(start_time) >= ? and date(start_time) <= ?", username, today, week).Find(&appointments)
-	}
-	for i := 0; i < len(appointments); i++ {
-		row := db.Table("parents p").Select("Concat(p.first_name, ' ', p.last_name) as Name").Where("p.username = ?", appointments[i].ParentID).Row()
-		row.Scan(&appointments[i].ParentID)
-	}
-	c.JSON(http.StatusOK, appointments)
-}
-
-func GetTeacherAgenda(c *gin.Context) {
-	db := InitDb()
-	defer db.Close()
-	username := c.Query("id")
-	class := c.Query("class")
-	scope := c.Query("scope")
-	if scope == "" {
-		scope = "week"
-	}
-	var teachClasses []TeachClass
-	var schedules []Schedule
-	var classSchedules []ClassSchedule
-	currentDay := time.Now().Weekday().String()
-	condition := ""
-	if class != "" {
-		condition = " and tc.class_id = '" + class + "'"
-	}
-	if scope == "day" {
-		db.Table("teach_classes tc, schedules s").Where("tc.teacher_id = ? and tc.schedule_id = s.schedule_id and s.day = ?"+condition, username, currentDay).Find(&teachClasses)
-	}
-	if scope == "week" {
-		db.Table("teach_classes tc").Where("tc.teacher_id = ?"+condition, username).Find(&teachClasses)
-	}
-	for i := 0; i < len(teachClasses); i++ {
-		if scope == "day" {
-			db.Where("schedule_id = ? and Day = ?", teachClasses[i].ScheduleID, currentDay).Find(&schedules)
-		} else if scope == "week" {
-			db.Where("schedule_id = ? ", teachClasses[i].ScheduleID).Find(&schedules)
-		}
-		temp := ClassSchedule{
-			TeachClass: teachClasses[i],
-			Time:       schedules,
-		}
-		classSchedules = append(classSchedules, temp)
-	}
-	c.JSON(http.StatusOK, classSchedules)
-}
-
-func GetTeacherClasses(c *gin.Context) {
-	db := InitDb()
-	defer db.Close()
-	var classes []TeachClass
-	username := c.Query("id")
-	class := c.Query("class")
-	if class != "" {
-		db.Where("teacher_id = ? AND class_id = ?", username, class).Find(&classes)
-	} else {
-		db.Where("teacher_id = ?", username).Find(&classes)
-	}
-	c.JSON(http.StatusOK, classes)
-}
-
-func GetTeacherClassGrades(c *gin.Context) {
-	db := InitDb()
-	defer db.Close()
-	id := c.Query("id")
-	class := c.Query("class")
-	subject := c.Query("subject")
-	condition := ""
-	if subject != "" {
-		condition = " and g.subject = '" + subject + "'"
-	}
-	var grades []Grade
-	db.Table("grades g, students s").Where("g.student_id = s.username and s.class_id = ? and g.teacher_id = ? "+condition, class, id).Find(&grades)
-	object := c.Query("object")
-	if object == "" {
-		object = "grade"
-	}
-	if object == "grade" {
-		var gradesWithNames []GradeWithName
-		var temp GradeWithName
-		var firstname string
-		var lastname string
-		for i := 0; i < len(grades); i++ {
-			row := db.Table("students s").Select("s.first_name as firstname, s.last_name as lastname").Where("s.username = ?", grades[i].StudentID).Row()
-			row.Scan(&firstname, &lastname)
-			temp = GradeWithName{
-				Grade:     grades[i],
-				FirstName: firstname,
-				LastName:  lastname,
-			}
-			gradesWithNames = append(gradesWithNames, temp)
-		}
-		c.JSON(http.StatusOK, gradesWithNames)
-	} else if object == "student" {
-		var studentsWithGrades []StudentWithGrade
-		var temp Student
-		for i := 0; i < len(grades); i++ {
-			db.Where("username = ?", grades[i].StudentID).First(&temp)
-			temp2 := StudentWithGrade{
-				Student: temp,
-				Grade:   grades[i],
-			}
-			studentsWithGrades = append(studentsWithGrades, temp2)
-		}
-		c.JSON(http.StatusOK, studentsWithGrades)
-	}
-}
-
-func PostTeacherClassGrades(c *gin.Context) {
-	db := InitDb()
-	defer db.Close()
-	var grades []Grade
-	c.Bind(&grades)
-	for i := 0; i < len(grades); i++ {
-		db.Create(&grades[i])
-	}
-	c.JSON(http.StatusOK, grades)
-}
-
-func PostTeacherInfo(c *gin.Context) {
-	db := InitDb()
-	defer db.Close()
-	var teacher Teacher
-	c.Bind(&teacher)
-	if teacher.Username == "" {
-		var lastTeacher Teacher
-		db.Limit(1).Order("LENGTH(username) desc, username desc").Find(&lastTeacher)
-		id := lastTeacher.Username
-		id = s.Trim(id, "T")
-		num, _ := strconv.Atoi(id)
-		num++
-		teacher.Username = "T" + strconv.Itoa(num)
-	}
-	db.Save(&teacher)
-	c.JSON(http.StatusOK, teacher)
-}
-
-func PostTeacherAppointment(c *gin.Context) {
-	db := InitDb()
-	defer db.Close()
-	var appointment Appointment
-	c.Bind(&appointment)
-	db.Save(&appointment)
-	c.JSON(http.StatusOK, appointment)
-}
-
-func GetParentInfo(c *gin.Context) {
-	db := InitDb()
-	defer db.Close()
-	username := c.Query("id")
-	var parent Parent
-	db.Where("username = ?", username).Find(&parent)
-	c.JSON(http.StatusOK, parent)
-}
-
-func GetParentNotifications(c *gin.Context) {
-	db := InitDb()
-	defer db.Close()
-	username := c.Query("id")
-	var notifications []Notification
-	db.Where("destination_id in ('ALL', 'PARENTS', ?) AND start_date < ? AND end_date > ?", username, time.Now(), time.Now()).Find(&notifications)
-	c.JSON(http.StatusOK, notifications)
-}
-
-func GetParentAppointments(c *gin.Context) {
-	db := InitDb()
-	defer db.Close()
-	username := c.Query("id")
-	scope := c.Query("scope")
-	if scope == "" {
-		scope = "week"
-	}
-	var appointments []Appointment
-	switch scope {
-	case "day":
-		date := getDateString(scope, 0)
-		db.Where("parent_id = ? AND date(start_time) = ?", username, date).Find(&appointments)
-	case "week":
-		today := getDateString("day", 0)
-		week := getDateString("day", 7)
-		db.Where("parent_id = ? AND date(start_time) >= ? and date(start_time) <= ?", username, today, week).Find(&appointments)
-	}
-	for i := 0; i < len(appointments); i++ {
-		row := db.Table("teachers t").Select("Concat(t.first_name, ' ', t.last_name) as Name").Where("t.username = ?", appointments[i].TeacherID).Row()
-		row.Scan(&appointments[i].TeacherID)
-	}
-	c.JSON(http.StatusOK, appointments)
-}
-
-func GetParentStudents(c *gin.Context) {
-	db := InitDb()
-	defer db.Close()
-	username := c.Query("id")
-	var students []Student
-	db.Table("students s, parent_ofs po").Where("po.parent_id = ? and po.student_id = s.username", username).Find(&students)
-	c.JSON(http.StatusOK, students)
-}
-
-func GetParentPayments(c *gin.Context) {
-	db := InitDb()
-	defer db.Close()
-	username := c.Query("id")
-	var payments []Payment
-	db.Where("parent_id = ?", username).Find(&payments)
-	c.JSON(http.StatusOK, payments)
-}
-
-func PostParentInfo(c *gin.Context) {
-	db := InitDb()
-	defer db.Close()
-	var parent Parent
-	c.Bind(&parent)
-	if parent.Username == "" {
-		var lastParent Parent
-		db.Limit(1).Order("LENGTH(username) desc, username desc").Find(&lastParent)
-		id := lastParent.Username
-		id = s.Trim(id, "P")
-		num, _ := strconv.Atoi(id)
-		num++
-		parent.Username = "P" + strconv.Itoa(num)
-	}
-	db.Save(&parent)
-	c.JSON(http.StatusOK, parent)
-}
-
-func PostParentAppointment(c *gin.Context) {
-	db := InitDb()
-	defer db.Close()
-	var appointment Appointment
-	c.Bind(&appointment)
-	db.Save(&appointment)
-	c.JSON(http.StatusOK, appointment)
-}
-
-func PostParentPayment(c *gin.Context) {
-	db := InitDb()
-	defer db.Close()
-	var payment Payment
-	c.Bind(&payment)
-	db.Save(&payment)
-	c.JSON(http.StatusOK, payment)
-}
-
-func GetClassStudents(c *gin.Context) {
-	db := InitDb()
-	defer db.Close()
-	class := c.Query("class")
-	var students []Student
-	db.Where("class_id = ?", class).Find(&students)
-	c.JSON(http.StatusOK, students)
-}
-
-func GetStudentGrades(c *gin.Context) {
-	db := InitDb()
-	defer db.Close()
-	id := c.Query("id")
-	var grades []Grade
-	db.Where("student_id = ?", id).Find(&grades)
-	c.JSON(http.StatusOK, grades)
-}
-
-func GetStudentInfo(c *gin.Context) {
-	db := InitDb()
-	defer db.Close()
-	var student Student
-	id := c.Query("id")
-	db.Where("username = ?", id).First(&student)
-	c.JSON(http.StatusOK, student)
-}
-
-func PostStudentInfo(c *gin.Context) {
-	db := InitDb()
-	defer db.Close()
-	var student Student
-	c.Bind(&student)
-	if student.Username == "" {
-		var lastStudent Student
-		db.Limit(1).Order("LENGTH(username) desc, username desc").Find(&lastStudent)
-		id := lastStudent.Username
-		id = s.Trim(id, "S")
-		num, _ := strconv.Atoi(id)
-		num++
-		student.Username = "S" + strconv.Itoa(num)
-	}
-	db.Save(&student)
-	c.JSON(http.StatusOK, student)
 }
 
 func getDateString(scope string, offset int) string {
