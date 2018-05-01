@@ -1,43 +1,27 @@
+// Package utils provides the implementations for setting up the routes, generating test data, plus a basic implementation of a login function.
 package utils
 
 import (
-	"MTDS-REST/model"
+	m "MTDS-REST/model"
+	p "MTDS-REST/parent"
+	d "MTDS-REST/student"
+	t "MTDS-REST/teacher"
+
 	"math"
 	"math/rand"
 	"net/http"
 	"strconv"
-	s "strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
+// R is the default Gin router
 var R = gin.Default()
 
-//Mon Jan 2 15:04:05 MST 2006
+var InitDb = m.InitDb
 
-type User = model.User
-type Teacher = model.Teacher
-type Parent = model.Parent
-type Student = model.Student
-type TeachClass = model.TeachClass
-type ParentOf = model.ParentOf
-type Notification = model.Notification
-type Schedule = model.Schedule
-type Appointment = model.Appointment
-type Payment = model.Payment
-type Grade = model.Grade
-type GradeSummary = model.GradeSummary
-
-type ClassSchedule = model.ClassSchedule
-type GradeWithName = model.GradeWithName
-type StudentWithGrade = model.StudentWithGrade
-type BasicStudent = model.BasicStudent
-type StudentParentGrades = model.StudentParentGrades
-type StudentGradesBySubject = model.StudentGradesBySubject
-
-var InitDb = model.InitDb
-
+// Cors is the function that does the handling of the headers (allowed origin, headers, methods etc...)
 func Cors() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Writer.Header().Add("Access-Control-Allow-Origin", "*")
@@ -45,6 +29,8 @@ func Cors() gin.HandlerFunc {
 	}
 }
 
+// SetupRoutes is a function that sets up the different API routes and specify the corresponding implementations.
+// Paths are divided based on category (login, teacher, parent, student, class etc...)
 func SetupRoutes() {
 
 	R.Use(Cors())
@@ -56,40 +42,40 @@ func SetupRoutes() {
 
 	teacher := R.Group("api/v1/teacher")
 	{
-		teacher.GET("/info", GetTeacherInfo)
-		teacher.GET("/notifications", GetTeacherNotifications)
-		teacher.GET("/appointments", GetTeacherAppointments)
-		teacher.GET("/agenda", GetTeacherAgenda)
-		teacher.GET("/classes", GetTeacherClasses)
-		teacher.GET("/grades", GetTeacherClassGrades)
-		teacher.POST("/grades", PostTeacherClassGrades)
-		teacher.POST("/info", PostTeacherInfo)
-		teacher.POST("/appointments", PostTeacherAppointment)
+		teacher.GET("/info", t.GetTeacherInfo)
+		teacher.GET("/notifications", t.GetTeacherNotifications)
+		teacher.GET("/appointments", t.GetTeacherAppointments)
+		teacher.GET("/agenda", t.GetTeacherAgenda)
+		teacher.GET("/classes", t.GetTeacherClasses)
+		teacher.GET("/grades", t.GetTeacherClassGrades)
+		teacher.POST("/grades", t.PostTeacherClassGrades)
+		teacher.POST("/info", t.PostTeacherInfo)
+		teacher.POST("/appointments", t.PostTeacherAppointment)
 	}
 
 	parent := R.Group("api/v1/parent")
 	{
-		parent.GET("/info", GetParentInfo)
-		parent.GET("/notifications", GetParentNotifications)
-		parent.GET("/appointments", GetParentAppointments)
-		parent.GET("/students", GetParentStudents)
-		parent.GET("/students/grades", GetParentStudentsGrades)
-		parent.GET("/payments", GetParentPayments)
-		parent.POST("/info", PostParentInfo)
-		parent.POST("/appointments", PostParentAppointment)
-		parent.POST("/payments", PostParentPayment)
+		parent.GET("/info", p.GetParentInfo)
+		parent.GET("/notifications", p.GetParentNotifications)
+		parent.GET("/appointments", p.GetParentAppointments)
+		parent.GET("/students", p.GetParentStudents)
+		parent.GET("/students/grades", p.GetParentStudentsGrades)
+		parent.GET("/payments", p.GetParentPayments)
+		parent.POST("/info", p.PostParentInfo)
+		parent.POST("/appointments", p.PostParentAppointment)
+		parent.POST("/payments", p.PostParentPayment)
 	}
 
 	class := R.Group("api/v1/class")
 	{
-		class.GET("/students", GetClassStudents)
+		class.GET("/students", d.GetClassStudents)
 	}
 
 	student := R.Group("api/v1/student")
 	{
-		student.GET("/info", GetStudentInfo)
-		student.GET("/grades", GetStudentGrades)
-		student.POST("/info", PostStudentInfo)
+		student.GET("/info", d.GetStudentInfo)
+		student.GET("/grades", d.GetStudentGrades)
+		student.POST("/info", d.PostStudentInfo)
 	}
 
 	test := R.Group("api/v1/test")
@@ -98,6 +84,8 @@ func SetupRoutes() {
 	}
 }
 
+// GenerateTestData is an automated data-generation function that generates 10 teachers, 100 parents, 200 students, classes, schedules, appointments, payments, and various
+// other components for testing and visualization purposes. The data is stored in a MySQL database.
 func GenerateTestData(c *gin.Context) {
 	db := InitDb()
 	defer db.Close()
@@ -116,7 +104,7 @@ func GenerateTestData(c *gin.Context) {
 			date := "12-" + strconv.Itoa(i) + "-1985"
 			Dob, _ = time.Parse("02-01-2006", date)
 		}
-		teacher := Teacher{
+		teacher := m.Teacher{
 			Username:         "T" + strconv.Itoa(i),
 			FirstName:        "TFirstName" + strconv.Itoa(i),
 			LastName:         "TLastName" + strconv.Itoa(i),
@@ -136,7 +124,7 @@ func GenerateTestData(c *gin.Context) {
 			StartDate:        time.Now().AddDate(0, -1, 0),
 			Status:           "1",
 		}
-		user := User{
+		user := m.User{
 			Username: "T" + strconv.Itoa(i),
 			Password: "TP" + strconv.Itoa(i),
 			Type:     1,
@@ -145,7 +133,7 @@ func GenerateTestData(c *gin.Context) {
 		db.Create(&user)
 	}
 	for i := 1; i <= 100; i++ {
-		parent := Parent{
+		parent := m.Parent{
 			Username:    "P" + strconv.Itoa(i),
 			FirstName:   "PFirstName" + strconv.Itoa(i),
 			LastName:    "PLastName" + strconv.Itoa(i),
@@ -156,7 +144,7 @@ func GenerateTestData(c *gin.Context) {
 			FiscalCode:  "PFiscCode" + strconv.Itoa(i),
 			Status:      "1",
 		}
-		user := User{
+		user := m.User{
 			Username: "P" + strconv.Itoa(i),
 			Password: "PP" + strconv.Itoa(i),
 			Type:     2,
@@ -168,7 +156,7 @@ func GenerateTestData(c *gin.Context) {
 	date, _ := time.Parse("02-01-2006", "01-01-2000")
 	for i := 1; i <= 10; i++ {
 		for j := 1; j <= 20; j++ {
-			student := Student{
+			student := m.Student{
 				Username:     "S" + strconv.Itoa(k),
 				FirstName:    "SFirstName" + strconv.Itoa(k),
 				LastName:     "SLastName" + strconv.Itoa(k),
@@ -192,7 +180,7 @@ func GenerateTestData(c *gin.Context) {
 	k = 1
 	for i := 1; i <= 10; i++ {
 		for j := 1; j <= 10; j++ {
-			teachClass := TeachClass{
+			teachClass := m.TeachClass{
 				TeacherID:  "T" + strconv.Itoa(i),
 				ClassID:    "C" + strconv.Itoa(j),
 				Subject:    "SubjectName" + strconv.Itoa(i),
@@ -213,7 +201,7 @@ func GenerateTestData(c *gin.Context) {
 			if i%2 == 0 {
 				r = "Mother"
 			}
-			parentOf := ParentOf{
+			parentOf := m.ParentOf{
 				StudentID:    "S" + strconv.Itoa(k),
 				ParentID:     "P" + strconv.Itoa(i),
 				Relationship: r,
@@ -231,7 +219,7 @@ func GenerateTestData(c *gin.Context) {
 		if i > 15 {
 			DestinationID = "PARENTS"
 		}
-		notification := Notification{
+		notification := m.Notification{
 			SenderID:      "School",
 			DestinationID: DestinationID,
 			Topic:         "NTOPIC" + strconv.Itoa(i),
@@ -244,7 +232,6 @@ func GenerateTestData(c *gin.Context) {
 		}
 		db.Create(&notification)
 	}
-	//Jan 2, 2006 at 3:04pm
 	days := []string{
 		"Monday",
 		"Tuesday",
@@ -256,7 +243,7 @@ func GenerateTestData(c *gin.Context) {
 			for i := 1; i <= 5; i++ {
 				start, _ := time.Parse(time.RFC3339, "2018-01-01T"+strconv.Itoa(i+j+6)+":00:00Z")
 				end, _ := time.Parse(time.RFC3339, "2018-01-01T"+strconv.Itoa(i+j+7)+":00:00Z")
-				schedule := Schedule{
+				schedule := m.Schedule{
 					ScheduleID: 721 + j,
 					Day:        days[i-1],
 					StartTime:  start,
@@ -268,7 +255,7 @@ func GenerateTestData(c *gin.Context) {
 		}
 	}
 	for i := 1; i <= 4; i++ {
-		appointment := Appointment{
+		appointment := m.Appointment{
 			AppointmentID: i,
 			TeacherID:     "T1",
 			ParentID:      "P" + strconv.Itoa(i),
@@ -281,7 +268,7 @@ func GenerateTestData(c *gin.Context) {
 		}
 		db.Create(&appointment)
 	}
-	appointment := Appointment{
+	appointment := m.Appointment{
 		AppointmentID: 5,
 		TeacherID:     "T1",
 		ParentID:      "P" + strconv.Itoa(5),
@@ -293,20 +280,20 @@ func GenerateTestData(c *gin.Context) {
 		StatusParent:  1,
 	}
 	db.Create(&appointment)
-	m := 1
+	a := 1
 	for i := 1; i <= 5; i++ {
 		for j := 1; j <= 2; j++ {
-			payment := Payment{
-				PaymentID:   "PID" + strconv.Itoa(m),
+			payment := m.Payment{
+				PaymentID:   "PID" + strconv.Itoa(a),
 				ParentID:    "P" + strconv.Itoa(i),
-				StudentID:   "S" + strconv.Itoa(m),
+				StudentID:   "S" + strconv.Itoa(a),
 				Amount:      truncate(r1.Float64()*1000+1000, 2),
 				Deadline:    time.Now().AddDate(0, 1, 0),
 				Status:      strconv.Itoa(j),
-				Description: "PayDesc" + strconv.Itoa(m),
+				Description: "PayDesc" + strconv.Itoa(a),
 			}
 			db.Create(&payment)
-			m++
+			a++
 		}
 	}
 	typeA := []string{"Homework", "Oral", "Quiz", "Exam"}
@@ -325,7 +312,7 @@ func GenerateTestData(c *gin.Context) {
 					} else if (k > 8 && k <= 10) || k > 17 {
 						t = 3
 					}
-					grade := Grade{
+					grade := m.Grade{
 						TeacherID: "T" + strconv.Itoa(j),
 						StudentID: "S" + strconv.Itoa(i),
 						Subject:   "SubjectName" + strconv.Itoa(j),
@@ -344,7 +331,7 @@ func GenerateTestData(c *gin.Context) {
 					if k%3 == 0 {
 						t = 1
 					}
-					grade := Grade{
+					grade := m.Grade{
 						TeacherID: "T" + strconv.Itoa(j),
 						StudentID: "S" + strconv.Itoa(i),
 						Subject:   "SubjectName" + strconv.Itoa(j),
@@ -363,7 +350,7 @@ func GenerateTestData(c *gin.Context) {
 	for i := 1; i <= 200; i++ {
 		for j := 1; j <= 10; j++ {
 			for k := 1; k <= 2; k++ {
-				gradeSummary := GradeSummary{
+				gradeSummary := m.GradeSummary{
 					TeacherID: "T" + strconv.Itoa(j),
 					StudentID: "S" + strconv.Itoa(i),
 					Subject:   "SubjectName" + strconv.Itoa(j),
@@ -379,14 +366,15 @@ func GenerateTestData(c *gin.Context) {
 	}
 }
 
+// PostLogin is the function that handles basic login. It returns a User object if login is successful, 404 otherwise.
 func PostLogin(c *gin.Context) {
 	db := InitDb()
 	defer db.Close()
-	var user User
+	var user m.User
 	c.Bind(&user)
 	username := user.Username
 	password := user.Password
-	var dbUser User
+	var dbUser m.User
 	db.Where("username = ? and password = ?", username, password).Find(&dbUser)
 	if dbUser.Username != "" {
 		dbUser.Password = ""
@@ -396,32 +384,7 @@ func PostLogin(c *gin.Context) {
 	}
 }
 
-func getDateString(scope string, offset int) string {
-	if scope == "day" {
-		dateString := time.Now().AddDate(0, 0, offset).Format("2006-01-02")
-		return dateString
-	}
-	if scope == "week" {
-		date := []string{time.Now().Format("02-01-2006")}
-		for i := 1; i <= 6; i++ {
-			date = append(date, time.Now().AddDate(0, 0, i).Format("02-01-2006"))
-		}
-		dateString := ""
-		for i := 0; i < len(date); i++ {
-			dateString += date[i] + "', '"
-		}
-		dateString = s.TrimSuffix(dateString, "', '")
-		return dateString
-	}
-	return ""
-}
-
+// truncate simply truncates the decimal part of a number down to n decimal places.
 func truncate(x float64, n int) float64 {
 	return math.Floor(x*math.Pow(10, float64(n))) * math.Pow(10, -float64(n))
-}
-
-func OptionsUser(c *gin.Context) {
-	c.Writer.Header().Set("Access-Control-Allow-Methods", "DELETE,POST, PUT")
-	c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	c.Next()
 }

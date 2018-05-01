@@ -1,6 +1,9 @@
-package utils
+// Package parent provides implementation for various parent-related methods.
+package parent
 
 import (
+	m "MTDS-REST/model"
+
 	"net/http"
 	"strconv"
 	s "strings"
@@ -9,40 +12,45 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+var initDb = m.InitDb
+
+// GetParentInfo return the information of a specific parent.
 func GetParentInfo(c *gin.Context) {
-	db := InitDb()
+	db := initDb()
 	defer db.Close()
 	username := c.Query("id")
-	var parent Parent
+	var parent m.Parent
 	db.Where("username = ?", username).Find(&parent)
 	c.JSON(http.StatusOK, parent)
 }
 
+// GetParentNotifications returns the notification that have this specific parent, "PARENTS", or "ALL" as destination.
 func GetParentNotifications(c *gin.Context) {
-	db := InitDb()
+	db := initDb()
 	defer db.Close()
 	username := c.Query("id")
-	var notifications []Notification
+	var notifications []m.Notification
 	db.Where("destination_id in ('ALL', 'PARENTS', ?) AND start_date < ? AND end_date > ?", username, time.Now(), time.Now()).Find(&notifications)
 	c.JSON(http.StatusOK, notifications)
 }
 
+// GetParentAppointments returns the scheduled appointments for a specific parent. The scope of the request can be specified (day/week).
 func GetParentAppointments(c *gin.Context) {
-	db := InitDb()
+	db := initDb()
 	defer db.Close()
 	username := c.Query("id")
 	scope := c.Query("scope")
 	if scope == "" {
 		scope = "week"
 	}
-	var appointments []Appointment
+	var appointments []m.Appointment
 	switch scope {
 	case "day":
-		date := getDateString(scope, 0)
+		date := m.GetDateString(scope, 0)
 		db.Where("parent_id = ? AND date(start_time) = ?", username, date).Find(&appointments)
 	case "week":
-		today := getDateString("day", 0)
-		week := getDateString("day", 7)
+		today := m.GetDateString("day", 0)
+		week := m.GetDateString("day", 7)
 		db.Where("parent_id = ? AND date(start_time) >= ? and date(start_time) <= ?", username, today, week).Find(&appointments)
 	}
 	for i := 0; i < len(appointments); i++ {
@@ -52,24 +60,26 @@ func GetParentAppointments(c *gin.Context) {
 	c.JSON(http.StatusOK, appointments)
 }
 
+// GetParentStudents returns the students associated with a specific parent.
 func GetParentStudents(c *gin.Context) {
-	db := InitDb()
+	db := initDb()
 	defer db.Close()
 	username := c.Query("id")
-	var students []Student
+	var students []m.Student
 	db.Table("students s, parent_ofs po").Where("po.parent_id = ? and po.student_id = s.username", username).Find(&students)
 	c.JSON(http.StatusOK, students)
 }
 
+// GetParentStudentsGrades returns the grades of the students associated with a specific parents. The grades are grouped by suject, and can be filtered by semester.
 func GetParentStudentsGrades(c *gin.Context) {
-	db := InitDb()
+	db := initDb()
 	defer db.Close()
 	id := c.Query("id")
-	var students []Student
-	var studentParentGrades []StudentParentGrades
-	var grades []Grade
-	var temp StudentParentGrades
-	var temp2 StudentGradesBySubject
+	var students []m.Student
+	var studentParentGrades []m.StudentParentGrades
+	var grades []m.Grade
+	var temp m.StudentParentGrades
+	var temp2 m.StudentGradesBySubject
 	semester := c.Query("semester")
 	db.Table("students s, parent_ofs po").Where("po.parent_id = ? and po.student_id = s.username", id).Find(&students)
 	for i := 0; i < len(students); i++ {
@@ -108,22 +118,24 @@ func GetParentStudentsGrades(c *gin.Context) {
 	c.JSON(http.StatusOK, studentParentGrades)
 }
 
+// GetParentPayments returns the pending payments associated with a specific parent.
 func GetParentPayments(c *gin.Context) {
-	db := InitDb()
+	db := initDb()
 	defer db.Close()
 	username := c.Query("id")
-	var payments []Payment
+	var payments []m.Payment
 	db.Where("parent_id = ?", username).Find(&payments)
 	c.JSON(http.StatusOK, payments)
 }
 
+// PostParentInfo updates the information of a specified parent, or creates a new parent with the given information otherwise.
 func PostParentInfo(c *gin.Context) {
-	db := InitDb()
+	db := initDb()
 	defer db.Close()
-	var parent Parent
+	var parent m.Parent
 	c.Bind(&parent)
 	if parent.Username == "" {
-		var lastParent Parent
+		var lastParent m.Parent
 		db.Limit(1).Order("LENGTH(username) desc, username desc").Find(&lastParent)
 		id := lastParent.Username
 		id = s.Trim(id, "P")
@@ -135,19 +147,21 @@ func PostParentInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, parent)
 }
 
+// PostParentAppointment creates a new appointment between a parent and a teacher in the database.
 func PostParentAppointment(c *gin.Context) {
-	db := InitDb()
+	db := initDb()
 	defer db.Close()
-	var appointment Appointment
+	var appointment m.Appointment
 	c.Bind(&appointment)
 	db.Save(&appointment)
 	c.JSON(http.StatusOK, appointment)
 }
 
+// PostParentPayment updates the payment details of specified payment associated with the specified parent in the database.
 func PostParentPayment(c *gin.Context) {
-	db := InitDb()
+	db := initDb()
 	defer db.Close()
-	var payment Payment
+	var payment m.Payment
 	c.Bind(&payment)
 	db.Save(&payment)
 	c.JSON(http.StatusOK, payment)

@@ -1,6 +1,8 @@
+// Package model provides the definitions of all of the structs included in the project, the names of the fields piped into JSON, and initializes the MySQL database accordingly.
 package model
 
 import (
+	s "strings"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -100,16 +102,15 @@ type Payment struct {
 }
 
 type Notification struct {
-	SenderID      string `form:"SenderID" json:"SenderID"`
-	DestinationID string `form:"DestinationID" json:"DestinationID"`
-	//Topic i.e. Payment due, School Trip, Parent-Teacher meeting, Student Medical Checkups etc...
-	Topic       string    `form:"Topic" json:"Topic"`
-	Title       string    `form:"Title" json:"Title"`
-	Description string    `form:"Description" json:"Description"`
-	Priority    string    `form:"Priority" json:"Priority"`
-	StartDate   time.Time `form:"StartDate" json:"StartDate"`
-	EndDate     time.Time `form:"EndDate" json:"EndDate"`
-	Status      string    `form:"Status" json:"Status"`
+	SenderID      string    `form:"SenderID" json:"SenderID"`
+	DestinationID string    `form:"DestinationID" json:"DestinationID"`
+	Topic         string    `form:"Topic" json:"Topic"`
+	Title         string    `form:"Title" json:"Title"`
+	Description   string    `form:"Description" json:"Description"`
+	Priority      string    `form:"Priority" json:"Priority"`
+	StartDate     time.Time `form:"StartDate" json:"StartDate"`
+	EndDate       time.Time `form:"EndDate" json:"EndDate"`
+	Status        string    `form:"Status" json:"Status"`
 }
 
 type Appointment struct {
@@ -185,6 +186,7 @@ type StudentParentGrades struct {
 	SubjectGrades []StudentGradesBySubject `form:"SubjectGrades" json:"SubjectGrades"`
 }
 
+// InitDb creates the connection with the MySQL database and creates the needed/missing tables based on the struct definitions previously specified.
 func InitDb() *gorm.DB {
 	// Openning file
 	db, err := gorm.Open("mysql", "root:@/testdb?parseTime=True")
@@ -245,4 +247,25 @@ func InitDb() *gorm.DB {
 		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&ParentOf{})
 	}
 	return db
+}
+
+// GetDateString is a utility function that generates a date string under a certain format with a possible offset for day/month/year etc...
+func GetDateString(scope string, offset int) string {
+	if scope == "day" {
+		dateString := time.Now().AddDate(0, 0, offset).Format("2006-01-02")
+		return dateString
+	}
+	if scope == "week" {
+		date := []string{time.Now().Format("02-01-2006")}
+		for i := 1; i <= 6; i++ {
+			date = append(date, time.Now().AddDate(0, 0, i).Format("02-01-2006"))
+		}
+		dateString := ""
+		for i := 0; i < len(date); i++ {
+			dateString += date[i] + "', '"
+		}
+		dateString = s.TrimSuffix(dateString, "', '")
+		return dateString
+	}
+	return ""
 }
