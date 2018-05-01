@@ -8,12 +8,16 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+// User is the struct containing the login data and type of users.
+//
+// Type = 0 for Administrators, 1 for Teachers, 2 for Parents.
 type User struct {
 	Username string `gorm:"PRIMARY_KEY" form:"Username" json:"Username"`
 	Password string `gorm:"not null" form:"Password" json:"Password"`
 	Type     int    `gorm:"not null" form:"Type" json:"Type"`
 }
 
+// Teacher is the basic teacher struct containing all related info. Fields are self-explanatory.
 type Teacher struct {
 	Username         string    `gorm:"PRIMARY_KEY" form:"Username" json:"Username"`
 	FirstName        string    `gorm:"not null" form:"FirstName" json:"FirstName"`
@@ -36,6 +40,7 @@ type Teacher struct {
 	Status           string    `form:"Status" json:"Status"`
 }
 
+// Parent is the basic parent struct containing all related info. Fields are self-explanatory.
 type Parent struct {
 	Username    string `gorm:"PRIMARY_KEY" form:"Username" json:"Username"`
 	FirstName   string `gorm:"not null" form:"FirstName" json:"FirstName"`
@@ -48,6 +53,7 @@ type Parent struct {
 	Status      string `form:"Status" json:"Status"`
 }
 
+// Student is the basic student struct containing all related info. Fields are self-explanatory.
 type Student struct {
 	Username     string    `gorm:"PRIMARY_KEY" form:"Username" json:"Username"`
 	FirstName    string    `gorm:"not null" form:"FirstName" json:"FirstName"`
@@ -67,6 +73,7 @@ type Student struct {
 	Status       string    `form:"Status" json:"Status"`
 }
 
+// Grade is the basic grade struct containing all related info. Fields are self-explanatory.
 type Grade struct {
 	TeacherID string    `form:"TeacherID" json:"TeacherID"`
 	StudentID string    `form:"StudentID" json:"StudentID"`
@@ -79,6 +86,7 @@ type Grade struct {
 	Remarks   string    `form:"Remarks" json:"Remarks"`
 }
 
+// GradeSummary is the struct containing all related info, representing the overall performance of a student in a specific course for a specific semester. Fields are self-explanatory.
 type GradeSummary struct {
 	TeacherID string    `form:"TeacherID" json:"TeacherID"`
 	StudentID string    `form:"StudentID" json:"StudentID"`
@@ -90,6 +98,9 @@ type GradeSummary struct {
 	Remarks   string    `form:"Remarks" json:"Remarks"`
 }
 
+// Payment is the basic payment struct containing all related info.
+//
+// Status = 1 for pending payments, 2 for completed.
 type Payment struct {
 	PaymentID   string    `gorm:"PRIMARY_KEY" form:"PaymentID" json:"PaymentID"`
 	ParentID    string    `form:"ParentID" json:"ParentID"`
@@ -101,6 +112,11 @@ type Payment struct {
 	Description string    `form:"Description" json:"Description"`
 }
 
+// Notification is the basic notification struct containing all related info.
+//
+// Status = 1 for active, 2 for discarded, 0 for expired.
+//
+// Topic = Trip, Parent-Teacher Conference, Holidays etc...
 type Notification struct {
 	SenderID      string    `form:"SenderID" json:"SenderID"`
 	DestinationID string    `form:"DestinationID" json:"DestinationID"`
@@ -113,6 +129,11 @@ type Notification struct {
 	Status        string    `form:"Status" json:"Status"`
 }
 
+// Appointment is the basic appointment struct containing all related info.
+//
+// Status = 1 for active, 2 for discarded, 0 for expired.
+//
+// StatusTeacher/StatusParent = 1 for approved, 0 for rejected.
 type Appointment struct {
 	AppointmentID int       `gorm:"PRIMARY_KEY" form:"AppointmentID" json:"AppointmentID"`
 	TeacherID     string    `form:"TeacherID" json:"TeacherID"`
@@ -126,6 +147,7 @@ type Appointment struct {
 	StatusParent  int       `form:"StatusParent" json:"StatusParent"`
 }
 
+// Schedule represents the timetable of a specific subject for a specific class. Fields are self-explanatory.
 type Schedule struct {
 	ScheduleID int       `form:"ScheduleID" json:"ScheduleID"`
 	Day        string    `form:"Day" json:"Day"`
@@ -134,6 +156,7 @@ type Schedule struct {
 	Semester   int       `form:"Semester" json:"Semester"`
 }
 
+// TeachClass contains the details of classes taught by teachers. Fields are self-explanatory.
 type TeachClass struct {
 	TeacherID  string `gorm:"PRIMARY_KEY" form:"TeacherID" json:"TeacherID"`
 	ClassID    string `gorm:"PRIMARY_KEY" form:"ClassID" json:"ClassID"`
@@ -145,6 +168,11 @@ type TeachClass struct {
 	Book       string `form:"Book" json:"Book"`
 }
 
+// ParentOf defines the parent-child relationships between parents and students.
+//
+// Relationship = 1 for Mother, 2 for Father.
+//
+// Status = 1 for active, 0 for removed.
 type ParentOf struct {
 	StudentID    string `form:"StudentID" json:"StudentID"`
 	ParentID     string `form:"ParentID" json:"ParentID"`
@@ -152,35 +180,34 @@ type ParentOf struct {
 	Status       string `form:"Status" json:"Status"`
 }
 
+// ClassSchedule is a custom struct created for JSON construction purposes.
 type ClassSchedule struct {
 	TeachClass `form:"TeachClass" json:"TeachClass"`
 	Time       []Schedule `form:"Schedule" json:"Schedule"`
 }
 
+// BasicStudent is a custom struct created for JSON construction purposes.
 type BasicStudent struct {
 	FirstName  string `form:"FirstName" json:"FirstName"`
 	LastName   string `form:"LastName" json:"LastName"`
 	ProfilePic string `form:"ProfilePic" json:"ProfilePic"`
 }
 
-type GradeWithName struct {
-	Grade     `form:"Grade" json:"Grade"`
-	FirstName string `form:"FirstName" json:"FirstName"`
-	LastName  string `form:"LastName" json:"LastName"`
-}
-
+// StudentWithGrade is a custom struct created for JSON construction purposes.
 type StudentWithGrade struct {
 	BasicStudent   `form:"BasicStudent" json:"BasicStudent"`
 	Grades         []Grade        `form:"Grade" json:"Grade"`
 	GradeSummaries []GradeSummary `form:"GradeSummary" json:"GradeSummary"`
 }
 
+// StudentGradesBySubject is a custom struct created for JSON construction purposes.
 type StudentGradesBySubject struct {
 	Subject        string         `form:"Subject" json:"Subject"`
 	Grades         []Grade        `form:"Grades" json:"Grades"`
 	GradeSummaries []GradeSummary `form:"GradeSummaries" json:"GradeSummaries"`
 }
 
+// StudentParentGrades is a custom struct created for JSON construction purposes.
 type StudentParentGrades struct {
 	BasicStudent  `form:"BasicStudent" json:"BasicStudent"`
 	SubjectGrades []StudentGradesBySubject `form:"SubjectGrades" json:"SubjectGrades"`

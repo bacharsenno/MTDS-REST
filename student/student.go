@@ -14,6 +14,10 @@ import (
 var initDb = m.InitDb
 
 // GetClassStudents returns the students in a specific class.
+//
+// Input: Class ID.
+//
+// Output: []Student.
 func GetClassStudents(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -24,6 +28,10 @@ func GetClassStudents(c *gin.Context) {
 }
 
 // GetStudentGrades returns the grades of a specific student.
+//
+// Input: Student ID.
+//
+// Output: []Grade.
 func GetStudentGrades(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -34,6 +42,10 @@ func GetStudentGrades(c *gin.Context) {
 }
 
 // GetStudentInfo returns the information pertaining to a specific student.
+//
+// Input: Student ID.
+//
+// Output: Student Object.
 func GetStudentInfo(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -44,6 +56,10 @@ func GetStudentInfo(c *gin.Context) {
 }
 
 // PostStudentInfo edits the information of a specific student if his ID exists in the database; otherwise, it creates a new student with the provided data.
+//
+// Input: Student Data (ID Optional).
+//
+// Output: Newly created/edited student.
 func PostStudentInfo(c *gin.Context) {
 	db := initDb()
 	defer db.Close()

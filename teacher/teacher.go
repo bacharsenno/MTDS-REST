@@ -15,6 +15,10 @@ import (
 var initDb = m.InitDb
 
 // GetTeacherInfo return the information of a specific teacher.
+//
+// Input: Teacher ID
+//
+// Output: Teacher Object
 func GetTeacherInfo(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -25,6 +29,10 @@ func GetTeacherInfo(c *gin.Context) {
 }
 
 // GetTeacherNotifications returns the notifications that have this specific teacher, "TEACHERS", or "ALL" as destination.
+//
+// Input: Teacher ID
+//
+// Output: []Notification
 func GetTeacherNotifications(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -35,6 +43,11 @@ func GetTeacherNotifications(c *gin.Context) {
 }
 
 // GetTeacherAppointments returns the scheduled appointments for a specific teacher. The scope of the request can be specified (day/week).
+//
+// Input:  Teacher ID, [Scope=day/week, week default]
+//
+// Output: []Appointment
+
 func GetTeacherAppointments(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -61,7 +74,10 @@ func GetTeacherAppointments(c *gin.Context) {
 }
 
 // GetTeacherAgenda returns the schedule of a specific teacher (i.e. time, location other info of lessons). The scope of the request can be specified (day/week).
-// Further parameters that can be specified are: Class (schedule for a specific class) and semester.
+//
+// Input: Teacher ID, [Class ID], [Scope=day/week, default week], [Semester]
+//
+// Output: []ClassSchedule
 func GetTeacherAgenda(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -105,6 +121,10 @@ func GetTeacherAgenda(c *gin.Context) {
 }
 
 // GetTeacherClasses returns the classes taught by a specific teacher.
+//
+// Input: Teacher ID, [Class ID]
+//
+// Output: []Classes
 func GetTeacherClasses(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -120,6 +140,10 @@ func GetTeacherClasses(c *gin.Context) {
 }
 
 // GetTeacherClassGrades returns the grades of the students in a specific class for a specific teacher. Semester-based filtering available.
+//
+// Input: TeacherID, Class ID
+//
+// Output: []StudentWithGrades
 func GetTeacherClassGrades(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -147,6 +171,10 @@ func GetTeacherClassGrades(c *gin.Context) {
 }
 
 // PostTeacherClassGrades saves the grades provided by a teacher in the database.
+//
+// Input: []Grades
+//
+// Output: []Grades
 func PostTeacherClassGrades(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -159,6 +187,10 @@ func PostTeacherClassGrades(c *gin.Context) {
 }
 
 // PostTeacherInfo updates the information of a specified teacher, or creates a new teacher with the given information otherwise.
+//
+// Input: Teacher Data (ID Optional)
+//
+// Output: Newly created/edited student.
 func PostTeacherInfo(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -172,12 +204,22 @@ func PostTeacherInfo(c *gin.Context) {
 		num, _ := strconv.Atoi(id)
 		num++
 		teacher.Username = "T" + strconv.Itoa(num)
+		user := m.User{
+			Username: teacher.Username,
+			Password: "TP" + strconv.Itoa(num),
+			Type:     1,
+		}
+		db.Save(&user)
 	}
 	db.Save(&teacher)
 	c.JSON(http.StatusOK, teacher)
 }
 
 // PostTeacherAppointment creates a new appointment between a teacher and a parent in the database.
+//
+// Input: Appointment
+//
+// Output: Appointment
 func PostTeacherAppointment(c *gin.Context) {
 	db := initDb()
 	defer db.Close()

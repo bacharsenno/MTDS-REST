@@ -15,6 +15,10 @@ import (
 var initDb = m.InitDb
 
 // GetParentInfo return the information of a specific parent.
+//
+// Input: Parent ID
+//
+// Output: Parent Object
 func GetParentInfo(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -25,6 +29,10 @@ func GetParentInfo(c *gin.Context) {
 }
 
 // GetParentNotifications returns the notification that have this specific parent, "PARENTS", or "ALL" as destination.
+//
+// Input: Parent ID
+//
+// Output: []Notification
 func GetParentNotifications(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -35,6 +43,10 @@ func GetParentNotifications(c *gin.Context) {
 }
 
 // GetParentAppointments returns the scheduled appointments for a specific parent. The scope of the request can be specified (day/week).
+//
+// Input: Teacher ID, [scope=day/week, default week]
+//
+// Output: []Appointment
 func GetParentAppointments(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -61,6 +73,10 @@ func GetParentAppointments(c *gin.Context) {
 }
 
 // GetParentStudents returns the students associated with a specific parent.
+//
+// Input: Parent ID
+//
+// Output: []Student
 func GetParentStudents(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -71,6 +87,10 @@ func GetParentStudents(c *gin.Context) {
 }
 
 // GetParentStudentsGrades returns the grades of the students associated with a specific parents. The grades are grouped by suject, and can be filtered by semester.
+//
+// Input: Parent ID, [Semester]
+//
+// Output: []StudentParentGrades
 func GetParentStudentsGrades(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -119,6 +139,10 @@ func GetParentStudentsGrades(c *gin.Context) {
 }
 
 // GetParentPayments returns the pending payments associated with a specific parent.
+//
+// Input: Parent ID
+//
+// Output: []Payment
 func GetParentPayments(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -129,6 +153,10 @@ func GetParentPayments(c *gin.Context) {
 }
 
 // PostParentInfo updates the information of a specified parent, or creates a new parent with the given information otherwise.
+//
+// Input: Teacher Data (ID Optional)
+//
+// Output: Newly created/edited student.
 func PostParentInfo(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -142,12 +170,22 @@ func PostParentInfo(c *gin.Context) {
 		num, _ := strconv.Atoi(id)
 		num++
 		parent.Username = "P" + strconv.Itoa(num)
+		user := m.User{
+			Username: parent.Username,
+			Password: "PP" + strconv.Itoa(num),
+			Type:     2,
+		}
+		db.Save(&user)
 	}
 	db.Save(&parent)
 	c.JSON(http.StatusOK, parent)
 }
 
 // PostParentAppointment creates a new appointment between a parent and a teacher in the database.
+//
+// Input: Appointment
+//
+// Output: Appointment
 func PostParentAppointment(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -158,6 +196,10 @@ func PostParentAppointment(c *gin.Context) {
 }
 
 // PostParentPayment updates the payment details of specified payment associated with the specified parent in the database.
+//
+// Input: Payment
+//
+// Output: Payment
 func PostParentPayment(c *gin.Context) {
 	db := initDb()
 	defer db.Close()

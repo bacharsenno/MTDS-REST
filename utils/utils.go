@@ -30,6 +30,7 @@ func Cors() gin.HandlerFunc {
 }
 
 // SetupRoutes is a function that sets up the different API routes and specify the corresponding implementations.
+//
 // Paths are divided based on category (login, teacher, parent, student, class etc...)
 func SetupRoutes() {
 
@@ -84,8 +85,8 @@ func SetupRoutes() {
 	}
 }
 
-// GenerateTestData is an automated data-generation function that generates 10 teachers, 100 parents, 200 students, classes, schedules, appointments, payments, and various
-// other components for testing and visualization purposes. The data is stored in a MySQL database.
+// GenerateTestData is an automated data-generation function that generates 10 teachers, 100 parents, 200 students, classes, schedules,
+// appointments, payments, and various other components for testing and visualization purposes. The data is stored in a MySQL database.
 func GenerateTestData(c *gin.Context) {
 	db := InitDb()
 	defer db.Close()
@@ -197,14 +198,10 @@ func GenerateTestData(c *gin.Context) {
 	k = 1
 	for i := 1; i <= 100; i++ {
 		for j := 1; j <= 2; j++ {
-			r := "Father"
-			if i%2 == 0 {
-				r = "Mother"
-			}
 			parentOf := m.ParentOf{
 				StudentID:    "S" + strconv.Itoa(k),
 				ParentID:     "P" + strconv.Itoa(i),
-				Relationship: r,
+				Relationship: strconv.Itoa(j),
 				Status:       "1",
 			}
 			k++
