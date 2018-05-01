@@ -244,21 +244,27 @@ func GenerateTestData(c *gin.Context) {
 		}
 		db.Create(&notification)
 	}
+	//Jan 2, 2006 at 3:04pm
 	days := []string{
 		"Monday",
 		"Tuesday",
 		"Wednesday",
 		"Thursday",
 		"Friday"}
-	for j := 1; j <= 10; j++ {
-		for i := 1; i <= 5; i++ {
-			schedule := Schedule{
-				ScheduleID: 721 + j,
-				Day:        days[i-1],
-				StartTime:  strconv.Itoa(i + j + 6),
-				EndTime:    strconv.Itoa(i + j + 7),
+	for k := 1; k <= 2; k++ {
+		for j := 1; j <= 10; j++ {
+			for i := 1; i <= 5; i++ {
+				start, _ := time.Parse(time.RFC3339, "2018-01-01T"+strconv.Itoa(i+j+6)+":00:00Z")
+				end, _ := time.Parse(time.RFC3339, "2018-01-01T"+strconv.Itoa(i+j+7)+":00:00Z")
+				schedule := Schedule{
+					ScheduleID: 721 + j,
+					Day:        days[i-1],
+					StartTime:  start,
+					EndTime:    end,
+					Semester:   k,
+				}
+				db.Create(&schedule)
 			}
-			db.Create(&schedule)
 		}
 	}
 	for i := 1; i <= 4; i++ {

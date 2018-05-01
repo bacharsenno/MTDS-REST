@@ -126,12 +126,11 @@ type Appointment struct {
 }
 
 type Schedule struct {
-	ScheduleID int    `form:"ScheduleID" json:"ScheduleID"`
-	Day        string `form:"Day" json:"Day"`
-	StartTime  string `form:"StartTime" json:"StartTime"`
-	EndTime    string `form:"EndTime" json:"EndTime"`
-	StartDate  string `form:"StartDate" json:"StartDate"`
-	EndDate    string `form:"EndDate" json:"EndDate"`
+	ScheduleID int       `form:"ScheduleID" json:"ScheduleID"`
+	Day        string    `form:"Day" json:"Day"`
+	StartTime  time.Time `form:"StartTime" json:"StartTime"`
+	EndTime    time.Time `form:"EndTime" json:"EndTime"`
+	Semester   int       `form:"Semester" json:"Semester"`
 }
 
 type TeachClass struct {
