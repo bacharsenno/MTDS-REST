@@ -14,12 +14,20 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+  "github.com/pjebs/restgate"   // Restgate is used for REST API authentication
 )
 
 // R is the default Gin router
 var R = gin.Default()
 
 var InitDb = m.InitDb
+
+// Restgate handles REST API authentication
+var rg = restgate.New("X-Auth-Key", "X-Auth-Secret", restgate.Static, restgate.Config{
+  Key: []string{"user"}, 
+  Secret: []string{"password"},
+  HTTPSProtectionOff: true,
+})
 
 // Cors is the function that does the handling of the headers (allowed origin, headers, methods etc...)
 func Cors() gin.HandlerFunc {
@@ -29,12 +37,24 @@ func Cors() gin.HandlerFunc {
 	}
 }
 
+// Create Gin middleware - integrate Restgate with Gin
+func rgAdapter() gin.HandlerFunc {
+  return func(c *gin.Context) {
+		nextAdapter := func(http.ResponseWriter, *http.Request) {
+			c.Next()
+		}
+		rg.ServeHTTP(c.Writer, c.Request, nextAdapter)
+	}
+}
+
 // SetupRoutes is a function that sets up the different API routes and specify the corresponding implementations.
 //
 // Paths are divided based on category (login, teacher, parent, student, class etc...)
 func SetupRoutes() {
 
 	R.Use(Cors())
+  
+  R.Use(rgAdapter())
 
 	login := R.Group("api/v1/login")
 	{

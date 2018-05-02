@@ -1,5 +1,12 @@
 # Middleware Technologies Project
 
+## Installation
+```
+go get github.com/gin-gonic/gin
+go get -u github.com/pjebs/restgate
+go run main.go
+```
+
 ## Initial Configuration
 
 - Drop all of the tables you have after every pull because sometimes I change the table structures
