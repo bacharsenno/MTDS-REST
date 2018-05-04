@@ -1,5 +1,13 @@
 # Middleware Technologies Project
 
+## Installation
+```
+go get github.com/gin-gonic/gin
+go get -u github.com/pjebs/restgate
+go get -u golang.org/x/crypto/bcrypt
+go run main.go
+```
+
 ## Initial Configuration
 
 - Drop all of the tables you have after every pull because sometimes I change the table structures
@@ -44,6 +52,7 @@ __Documentation__:
 ## Useful links:
 - documentation: [readthedocs](https://readthedocs.org/)
 - SoapUI: API tester
+- Password Storage: [bcrypt](https://astaxie.gitbooks.io/build-web-application-with-golang/en/09.5.html)
 
 ### Front-End Stuff
 - graphs: 
