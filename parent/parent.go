@@ -262,9 +262,13 @@ func PostParentPayment(c *gin.Context) {
 	var payment m.Payment
 	c.Bind(&payment)
 	if payment.PaymentID == "" || payment.ParentID == "" {
-		c.JSON(http.StatusBadRequest, nil)
-	} else {
-		db.Save(&payment)
-		c.JSON(http.StatusOK, payment)
+		var lastPayment m.Payment
+		db.Limit(1).Order("LENGTH(payment_id) desc, payment_id desc").Find(&lastPayment)
+		pid := lastPayment.PaymentID
+		num, _ := strconv.Atoi(s.Trim(pid, "PID"))
+		num++
+		payment.PaymentID = "PID" + strconv.Itoa(num)
 	}
+	db.Save(&payment)
+	c.JSON(http.StatusOK, payment)
 }

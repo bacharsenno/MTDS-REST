@@ -143,6 +143,9 @@ func GenerateTestData(c *gin.Context) {
 		"https://pbs.twimg.com/profile_images/490643057822273537/pMkrGQPT_400x400.jpeg"}
 	s1 := rand.NewSource(time.Now().UnixNano())
 	r1 := rand.New(s1)
+	db.Where("type = 0").Delete(&m.User{})
+	hash, _ := bcrypt.GenerateFromPassword([]byte("AA1"), bcrypt.DefaultCost)
+	db.Save(&m.User{Username: "A1", Password: string(hash), Type: 0})
 	if s.Contains(tables, "teachers") || tables == "" {
 		db.DropTableIfExists("teachers")
 		db.CreateTable(&m.Teacher{})
