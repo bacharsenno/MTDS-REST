@@ -130,6 +130,7 @@ func GetParentStudentsGrades(c *gin.Context) {
 	db.Table("students s, parent_ofs po").Where("po.parent_id = ? and po.student_id = s.username", id).Find(&students)
 	if len(students) > 0 {
 		for i := 0; i < len(students); i++ {
+			temp.BasicStudent.StudentID = students[i].Username
 			temp.BasicStudent.FirstName = students[i].FirstName
 			temp.BasicStudent.LastName = students[i].LastName
 			temp.BasicStudent.ProfilePic = students[i].ProfilePic

@@ -187,6 +187,7 @@ func GetTeacherClassGrades(c *gin.Context) {
 	db.Where("class_id = ?", class).Order("LENGTH(username), username").Find(&classStudents)
 	if len(classStudents) > 0 {
 		for i := 0; i < len(classStudents); i++ {
+			swgtemp.BasicStudent.StudentID = classStudents[i].Username
 			swgtemp.BasicStudent.FirstName = classStudents[i].FirstName
 			swgtemp.BasicStudent.LastName = classStudents[i].LastName
 			swgtemp.BasicStudent.ProfilePic = classStudents[i].ProfilePic

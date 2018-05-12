@@ -80,7 +80,7 @@ func Cors() gin.HandlerFunc {
 func SetupRoutes() {
 
 	R.Use(Cors())
-	R.Use(rgAdapter)
+	//R.Use(rgAdapter)
 	R.Use(gin.Recovery())
 	login := R.Group("api/v1/login")
 	{

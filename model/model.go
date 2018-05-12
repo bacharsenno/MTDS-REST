@@ -188,6 +188,7 @@ type ClassSchedule struct {
 
 // BasicStudent is a custom struct created for JSON construction purposes.
 type BasicStudent struct {
+	StudentID  string `form:"StudentID" json:"StudentID"`
 	FirstName  string `form:"FirstName" json:"FirstName"`
 	LastName   string `form:"LastName" json:"LastName"`
 	ProfilePic string `form:"ProfilePic" json:"ProfilePic"`
