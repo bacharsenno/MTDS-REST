@@ -214,6 +214,11 @@ type StudentParentGrades struct {
 	SubjectGrades []StudentGradesBySubject `form:"SubjectGrades" json:"SubjectGrades"`
 }
 
+// GradesList is a custom struct created for JSON construction purposes.
+type GradesList struct {
+	Grades []Grade `form:"Grades" json:"Grades"`
+}
+
 // InitDb creates the connection with the MySQL database and creates the needed/missing tables based on the struct definitions previously specified.
 func InitDb() *gorm.DB {
 	// Openning file

@@ -217,8 +217,9 @@ func GetTeacherClassGrades(c *gin.Context) {
 func PostTeacherClassGrades(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
-	var grades []m.Grade
-	c.Bind(&grades)
+	var gradesList m.GradesList
+	c.Bind(&gradesList)
+	grades := gradesList.Grades
 	for i := 0; i < len(grades); i++ {
 		db.Save(&grades[i])
 	}
