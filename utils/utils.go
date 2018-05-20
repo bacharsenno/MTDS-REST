@@ -97,7 +97,8 @@ func SetupRoutes() {
 		teacher.GET("/grades", t.GetTeacherClassGrades)
 		teacher.POST("/grades", t.PostTeacherClassGrades)
 		teacher.POST("/info", t.PostTeacherInfo)
-		teacher.POST("/appointments", t.PostTeacherAppointment)
+		teacher.POST("/appointments", t.PostAppointmentInfo)
+		teacher.POST("/appointment", t.PostTeacherAppointment)
 	}
 
 	parent := R.Group("api/v1/parent")

@@ -80,11 +80,11 @@ func GetTeacherAppointments(c *gin.Context) {
 		week := m.GetDateString("day", 7)
 		db.Where("teacher_id = ? AND date(start_time) >= ? and date(start_time) <= ?", username, today, week).Find(&appointments)
 	}
-	for i := 0; i < len(appointments); i++ {
-		row := db.Table("parents p").Select("Concat(p.first_name, ' ', p.last_name) as Name").Where("p.username = ?", appointments[i].ParentID).Row()
-		row.Scan(&appointments[i].ParentID)
-	}
 	if len(appointments) > 0 {
+		for i := 0; i < len(appointments); i++ {
+			row := db.Table("parents p").Select("Concat(p.first_name, ' ', p.last_name) as Name").Where("p.username = ?", appointments[i].ParentID).Row()
+			row.Scan(&appointments[i].ParentID)
+		}
 		c.JSON(http.StatusOK, appointments)
 	} else {
 		c.JSON(http.StatusOK, make([]string, 0))
@@ -261,14 +261,14 @@ func PostTeacherInfo(c *gin.Context) {
 	}
 }
 
-// PostTeacherAppointment creates a new appointment between a teacher and a parent in the database.
+// PostAppointmentInfo updates an appointment between a teacher and a parent in the database.
 //
 // Input: Appointment
 //
 // Output: Appointment
 //
 // Example URL: http://localhost:8080/api/v1/teacher/appointments
-func PostTeacherAppointment(c *gin.Context) {
+func PostAppointmentInfo(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
 	var appointment m.Appointment
@@ -280,4 +280,50 @@ func PostTeacherAppointment(c *gin.Context) {
 	}
 	db.Save(&appointment)
 	c.JSON(http.StatusOK, appointment)
+}
+
+// PostTeacherAppointment creates a new appointment between a teacher and a parent in the database.
+//
+// Input: Appointment
+//
+// Output: Appointment
+//
+// Example URL: http://localhost:8080/api/v1/teacher/appointment
+func PostTeacherAppointment(c *gin.Context) {
+	db := initDb()
+	defer db.Close()
+	var appointmentReq m.AppointmentRequest
+	c.Bind(&appointmentReq)
+	if appointmentReq.ParentID == "" {
+		var parents []m.ParentOf
+		db.Where("student_id = ? AND Status = 1", appointmentReq.StudentID).Find(&parents)
+		for i := 0; i < len(parents); i++ {
+			app := m.Appointment{
+				TeacherID:     appointmentReq.TeacherID,
+				ParentID:      parents[i].ParentID,
+				FullDay:       appointmentReq.FullDay,
+				StartTime:     appointmentReq.StartTime,
+				EndTime:       appointmentReq.EndTime,
+				Remarks:       appointmentReq.Remarks,
+				Status:        0,
+				StatusTeacher: 1,
+				StatusParent:  0,
+			}
+			db.Save(&app)
+		}
+	} else {
+		app := m.Appointment{
+			TeacherID:     appointmentReq.TeacherID,
+			ParentID:      appointmentReq.ParentID,
+			FullDay:       appointmentReq.FullDay,
+			StartTime:     appointmentReq.StartTime,
+			EndTime:       appointmentReq.EndTime,
+			Remarks:       appointmentReq.Remarks,
+			Status:        0,
+			StatusTeacher: 1,
+			StatusParent:  0,
+		}
+		db.Save(&app)
+	}
+	c.String(http.StatusOK, "Insertion Done")
 }

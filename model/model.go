@@ -135,7 +135,7 @@ type Notification struct {
 //
 // StatusTeacher/StatusParent = 1 for approved, 0 for rejected.
 type Appointment struct {
-	AppointmentID int       `gorm:"PRIMARY_KEY" form:"AppointmentID" json:"AppointmentID"`
+	AppointmentID int       `gorm:"PRIMARY_KEY;AUTO_INCREMENT" form:"AppointmentID" json:"AppointmentID"`
 	TeacherID     string    `form:"TeacherID" json:"TeacherID"`
 	ParentID      string    `form:"ParentID" json:"ParentID"`
 	FullDay       bool      `form:"FullDay" json:"FullDay"`
@@ -217,6 +217,17 @@ type StudentParentGrades struct {
 // GradesList is a custom struct created for JSON construction purposes.
 type GradesList struct {
 	Grades []Grade `form:"Grades" json:"Grades"`
+}
+
+// AppointmentRequest is a custom struct created for JSON construction purposes.
+type AppointmentRequest struct {
+	StudentID string    `form:"StudentID" json:"StudentID"`
+	TeacherID string    `form:"TeacherID" json:"TeacherID"`
+	ParentID  string    `form:"ParentID" json:"ParentID"`
+	FullDay   bool      `form:"FullDay" json:"FullDay"`
+	StartTime time.Time `form:"StartTime" json:"StartTime"`
+	EndTime   time.Time `form:"EndTime" json:"EndTime"`
+	Remarks   string    `form:"Remarks" json:"Remarks"`
 }
 
 // InitDb creates the connection with the MySQL database and creates the needed/missing tables based on the struct definitions previously specified.
