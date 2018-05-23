@@ -46,7 +46,14 @@ func GetParentNotifications(c *gin.Context) {
 	defer db.Close()
 	username := c.Query("id")
 	var notifications []m.Notification
-	db.Where("destination_id in ('ALL', 'PARENTS', ?) AND start_date < ? AND end_date > ?", username, time.Now(), time.Now()).Find(&notifications)
+	var students []m.Student
+	db.Table("parent_ofs po, students s").Select("s.*").Where("po.parent_id = ? and po.student_id = s.username", username).Find(&students)
+	var classes []string
+	for i := 0; i < len(students); i++ {
+		classes = append(classes, students[i].ClassID)
+	}
+	classesString := s.Join(classes, "','")
+	db.Where("destination_id in ('ALL', 'PARENTS', ?, ?) AND start_date < ? AND end_date > ?", username, classesString, time.Now(), time.Now()).Find(&notifications)
 	if len(notifications) > 0 {
 		c.JSON(http.StatusOK, notifications)
 	} else {
@@ -56,28 +63,30 @@ func GetParentNotifications(c *gin.Context) {
 
 // GetParentAppointments returns the scheduled appointments for a specific parent. The scope of the request can be specified (day/week).
 //
-// Input: Teacher ID, [scope=day/week, default week]
+// Input: Parent ID, [scope=day/week/all, default all]
 //
 // Output: []Appointment
 //
-// Example URL: http://localhost:8080/api/v1/parent/appointments?id=P1&scope=week
+// Example URL: http://localhost:8080/api/v1/parent/appointments?id=P1
 func GetParentAppointments(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
 	username := c.Query("id")
 	scope := c.Query("scope")
 	if scope == "" {
-		scope = "week"
+		scope = "all"
 	}
 	var appointments []m.Appointment
 	switch scope {
 	case "day":
-		date := m.GetDateString(scope, 0)
+		date := m.GetDateString(0)
 		db.Where("parent_id = ? AND date(start_time) = ?", username, date).Find(&appointments)
 	case "week":
-		today := m.GetDateString("day", 0)
-		week := m.GetDateString("day", 7)
+		today := m.GetDateString(0)
+		week := m.GetDateString(7)
 		db.Where("parent_id = ? AND date(start_time) >= ? and date(start_time) <= ?", username, today, week).Find(&appointments)
+	case "all":
+		db.Where("parent_id = ?", username).Find(&appointments)
 	}
 	if len(appointments) > 0 {
 		for i := 0; i < len(appointments); i++ {
@@ -196,15 +205,16 @@ func GetParentPayments(c *gin.Context) {
 
 // PostParentInfo updates the information of a specified parent, or creates a new parent with the given information otherwise.
 //
-// Input: Teacher Data (ID Optional)
+// Input: Parent Data (ID Optional)
 //
-// Output: Newly created/edited student.
+// Output: Post Response.
 //
 // Example URL: http://localhost:8080/api/v1/parent/info
 func PostParentInfo(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
 	var parent m.Parent
+	var post m.PostResponse
 	c.Bind(&parent)
 	if parent.FirstName != "" && parent.LastName != "" && parent.Email != "" {
 		if parent.Username == "" {
@@ -223,9 +233,13 @@ func PostParentInfo(c *gin.Context) {
 			db.Save(&user)
 		}
 		db.Save(&parent)
-		c.JSON(http.StatusOK, parent)
+		post.Code = 200
+		post.Message = "Parent created/updated successfully."
+		c.JSON(http.StatusOK, post)
 	} else {
-		c.String(http.StatusBadRequest, "Bad Input")
+		post.Code = 400
+		post.Message = "Missing Parameters"
+		c.JSON(http.StatusBadRequest, post)
 	}
 }
 
@@ -233,13 +247,14 @@ func PostParentInfo(c *gin.Context) {
 //
 // Input: Appointment
 //
-// Output: Appointment
+// Output: Post Response
 //
 // Example URL: http://localhost:8080/api/v1/parent/appointments
 func PostParentAppointment(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
 	var appointment m.Appointment
+	var post m.PostResponse
 	c.Bind(&appointment)
 	if appointment.AppointmentID == 0 {
 		var lastAppointment m.Appointment
@@ -247,20 +262,23 @@ func PostParentAppointment(c *gin.Context) {
 		appointment.AppointmentID = lastAppointment.AppointmentID + 1
 	}
 	db.Save(&appointment)
-	c.JSON(http.StatusOK, appointment)
+	post.Code = 200
+	post.Message = "Appointment created/updated successfully."
+	c.JSON(http.StatusOK, post)
 }
 
 // PostParentPayment updates the payment details of specified payment associated with the specified parent in the database.
 //
 // Input: Payment
 //
-// Output: Payment
+// Output: Post Response
 //
 // Example URL: http://localhost:8080/api/v1/parent/payments
 func PostParentPayment(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
 	var payment m.Payment
+	var post m.PostResponse
 	c.Bind(&payment)
 	if payment.PaymentID == "" || payment.ParentID == "" {
 		var lastPayment m.Payment
@@ -271,5 +289,7 @@ func PostParentPayment(c *gin.Context) {
 		payment.PaymentID = "PID" + strconv.Itoa(num)
 	}
 	db.Save(&payment)
-	c.JSON(http.StatusOK, payment)
+	post.Code = 200
+	post.Message = "Payment updated successfully."
+	c.JSON(http.StatusOK, post)
 }

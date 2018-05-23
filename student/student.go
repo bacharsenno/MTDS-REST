@@ -77,16 +77,19 @@ func GetStudentInfo(c *gin.Context) {
 //
 // Input: Student Data (ID Optional).
 //
-// Output: Newly created/edited student.
+// Output: Post Response
 //
 // Example URL: http://localhost:8080/api/v1/student/info
 func PostStudentInfo(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
 	var student m.Student
+	var post m.PostResponse
 	c.Bind(&student)
 	if student.FirstName == "" || student.LastName == "" || student.ClassID == "" {
-		c.String(http.StatusBadRequest, "Invalid Input")
+		post.Code = 400
+		post.Message = "Missing Parameters"
+		c.JSON(http.StatusBadRequest, post)
 	} else {
 		if student.Username == "" {
 			var lastStudent m.Student
@@ -98,6 +101,8 @@ func PostStudentInfo(c *gin.Context) {
 			student.Username = "S" + strconv.Itoa(num)
 		}
 		db.Save(&student)
-		c.JSON(http.StatusOK, student)
+		post.Code = 200
+		post.Message = "Student added/updated successfully."
+		c.JSON(http.StatusOK, post)
 	}
 }

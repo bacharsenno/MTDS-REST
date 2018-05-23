@@ -2,7 +2,6 @@
 package model
 
 import (
-	s "strings"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -230,6 +229,12 @@ type AppointmentRequest struct {
 	Remarks   string    `form:"Remarks" json:"Remarks"`
 }
 
+// PostResponse is the default struct returned as response for any POST request.
+type PostResponse struct {
+	Code    int    `form:"code" json:"code"`
+	Message string `form:"message" json:"message"`
+}
+
 // InitDb creates the connection with the MySQL database and creates the needed/missing tables based on the struct definitions previously specified.
 func InitDb() *gorm.DB {
 	// Openning file
@@ -241,7 +246,6 @@ func InitDb() *gorm.DB {
 	if err != nil {
 		panic(err)
 	}
-	//Tables: User Teacher Parent Student Subject Class Grade Payment Notification NotificationTopics Appointment TeachClass ParentOf
 	if !db.HasTable(&User{}) {
 		db.CreateTable(&User{})
 		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&User{})
@@ -294,22 +298,7 @@ func InitDb() *gorm.DB {
 }
 
 // GetDateString is a utility function that generates a date string under a certain format with a possible offset for day/month/year etc...
-func GetDateString(scope string, offset int) string {
-	if scope == "day" {
-		dateString := time.Now().AddDate(0, 0, offset).Format("2006-01-02")
-		return dateString
-	}
-	if scope == "week" {
-		date := []string{time.Now().Format("02-01-2006")}
-		for i := 1; i <= 6; i++ {
-			date = append(date, time.Now().AddDate(0, 0, i).Format("02-01-2006"))
-		}
-		dateString := ""
-		for i := 0; i < len(date); i++ {
-			dateString += date[i] + "', '"
-		}
-		dateString = s.TrimSuffix(dateString, "', '")
-		return dateString
-	}
-	return ""
+func GetDateString(offset int) string {
+	dateString := time.Now().AddDate(0, 0, offset).Format("2006-01-02")
+	return dateString
 }

@@ -2,6 +2,7 @@
 package utils
 
 import (
+	a "MTDS-REST/admin"
 	m "MTDS-REST/model"
 	p "MTDS-REST/parent"
 	d "MTDS-REST/student"
@@ -124,6 +125,16 @@ func SetupRoutes() {
 		student.GET("/info", d.GetStudentInfo)
 		student.GET("/grades", d.GetStudentGrades)
 		student.POST("/info", d.PostStudentInfo)
+	}
+
+	admin := R.Group("api/v1/admin")
+	{
+		admin.POST("/", a.PostAdminInfo)
+		admin.POST("/notification", a.PostAdminNotification)
+		admin.POST("/parent", a.PostAdminParent)
+		admin.POST("/payment", a.PostAdminPayment)
+		admin.POST("/student", a.PostAdminStudent)
+		admin.POST("/teacher", a.PostAdminTeacher)
 	}
 
 	test := R.Group("api/v1/test")

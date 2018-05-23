@@ -3,6 +3,7 @@ package teacher
 
 import (
 	m "MTDS-REST/model"
+	"fmt"
 
 	"net/http"
 	"strconv"
@@ -46,7 +47,15 @@ func GetTeacherNotifications(c *gin.Context) {
 	defer db.Close()
 	username := c.Query("id")
 	var notifications []m.Notification
-	db.Where("destination_id in ('ALL', 'TEACHERS', ?) AND start_date < ? AND end_date > ?", username, time.Now(), time.Now()).Find(&notifications)
+	var teachClasses []m.TeachClass
+	var classes []string
+	db.Where("teacher_id = ?", username).Find(&teachClasses)
+	for i := 0; i < len(teachClasses); i++ {
+		classes = append(classes, teachClasses[i].ClassID)
+	}
+	classesString := s.Join(classes, "','")
+	fmt.Println(classesString)
+	db.Where("destination_id in ('ALL', 'TEACHERS', ?, ?) AND start_date < ? AND end_date > ?", username, classesString, time.Now(), time.Now()).Find(&notifications)
 	if len(notifications) > 0 {
 		c.JSON(http.StatusOK, notifications)
 	} else {
@@ -56,29 +65,30 @@ func GetTeacherNotifications(c *gin.Context) {
 
 // GetTeacherAppointments returns the scheduled appointments for a specific teacher. The scope of the request can be specified (day/week).
 //
-// Input:  Teacher ID, [Scope=day/week, week default]
+// Input:  Teacher ID, [Scope=day/week/all, default all]
 //
 // Output: []Appointment
 //
-// Example URL: http://localhost:8080/api/v1/teacher/appointments?id=T1&scope=week
-
+// Example URL: http://localhost:8080/api/v1/teacher/appointments?id=T1
 func GetTeacherAppointments(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
 	username := c.Query("id")
 	scope := c.Query("scope")
 	if scope == "" {
-		scope = "week"
+		scope = "all"
 	}
 	var appointments []m.Appointment
 	switch scope {
 	case "day":
-		date := m.GetDateString(scope, 0)
+		date := m.GetDateString(0)
 		db.Where("teacher_id = ? AND date(start_time) = ?", username, date).Find(&appointments)
 	case "week":
-		today := m.GetDateString("day", 0)
-		week := m.GetDateString("day", 7)
+		today := m.GetDateString(0)
+		week := m.GetDateString(7)
 		db.Where("teacher_id = ? AND date(start_time) >= ? and date(start_time) <= ?", username, today, week).Find(&appointments)
+	case "all":
+		db.Where("teacher_id = ?", username).Find(&appointments)
 	}
 	if len(appointments) > 0 {
 		for i := 0; i < len(appointments); i++ {
@@ -211,32 +221,36 @@ func GetTeacherClassGrades(c *gin.Context) {
 //
 // Input: []Grades
 //
-// Output: []Grades
+// Output: Post Response
 //
 // Example URL: http://localhost:8080/api/v1/teacher/grades
 func PostTeacherClassGrades(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
 	var gradesList m.GradesList
+	var post m.PostResponse
 	c.Bind(&gradesList)
 	grades := gradesList.Grades
 	for i := 0; i < len(grades); i++ {
 		db.Save(&grades[i])
 	}
-	c.JSON(http.StatusOK, grades)
+	post.Code = 200
+	post.Message = "Grades created/updated successfully."
+	c.JSON(http.StatusOK, post)
 }
 
 // PostTeacherInfo updates the information of a specified teacher, or creates a new teacher with the given information otherwise.
 //
 // Input: Teacher Data (ID Optional)
 //
-// Output: Newly created/edited student.
+// Output: Post Response
 //
 // Example URL: http://localhost:8080/api/v1/teacher/info
 func PostTeacherInfo(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
 	var teacher m.Teacher
+	var post m.PostResponse
 	c.Bind(&teacher)
 	if teacher.FirstName != "" && teacher.LastName != "" && teacher.ProfilePic != "" {
 		if teacher.Username == "" {
@@ -255,9 +269,13 @@ func PostTeacherInfo(c *gin.Context) {
 			db.Save(&user)
 		}
 		db.Save(&teacher)
-		c.JSON(http.StatusOK, teacher)
+		post.Code = 200
+		post.Message = "Teacher created/updated successfully."
+		c.JSON(http.StatusOK, post)
 	} else {
-		c.String(http.StatusBadRequest, "Bad Input")
+		post.Code = 400
+		post.Message = "Missing Parameters"
+		c.JSON(http.StatusBadRequest, post)
 	}
 }
 
@@ -265,13 +283,14 @@ func PostTeacherInfo(c *gin.Context) {
 //
 // Input: Appointment
 //
-// Output: Appointment
+// Output: Post Response
 //
 // Example URL: http://localhost:8080/api/v1/teacher/appointments
 func PostAppointmentInfo(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
 	var appointment m.Appointment
+	var post m.PostResponse
 	c.Bind(&appointment)
 	if appointment.AppointmentID == 0 {
 		var lastAppointment m.Appointment
@@ -279,14 +298,16 @@ func PostAppointmentInfo(c *gin.Context) {
 		appointment.AppointmentID = lastAppointment.AppointmentID + 1
 	}
 	db.Save(&appointment)
-	c.JSON(http.StatusOK, appointment)
+	post.Code = 200
+	post.Message = "Appointment created/updated successfully."
+	c.JSON(http.StatusOK, post)
 }
 
 // PostTeacherAppointment creates a new appointment between a teacher and a parent in the database.
 //
 // Input: Appointment
 //
-// Output: Appointment
+// Output: Post Response
 //
 // Example URL: http://localhost:8080/api/v1/teacher/appointment
 func PostTeacherAppointment(c *gin.Context) {
@@ -325,5 +346,5 @@ func PostTeacherAppointment(c *gin.Context) {
 		}
 		db.Save(&app)
 	}
-	c.String(http.StatusOK, "Insertion Done")
+	c.String(http.StatusOK, "Appointment created/updated successfully.")
 }
