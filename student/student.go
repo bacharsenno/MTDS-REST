@@ -49,7 +49,7 @@ func GetStudentGrades(c *gin.Context) {
 	if len(grades) > 0 {
 		c.JSON(http.StatusOK, grades)
 	} else {
-		c.JSON(http.StatusBadRequest, make([]string, 0))
+		c.JSON(http.StatusOK, make([]string, 0))
 	}
 }
 

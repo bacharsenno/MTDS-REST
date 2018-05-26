@@ -150,7 +150,7 @@ func GetTeacherAgenda(c *gin.Context) {
 		}
 		c.JSON(http.StatusOK, classSchedules)
 	} else {
-		c.JSON(http.StatusBadRequest, make([]string, 0))
+		c.JSON(http.StatusOK, make([]string, 0))
 	}
 }
 
@@ -175,7 +175,7 @@ func GetTeacherClasses(c *gin.Context) {
 	if len(classes) > 0 {
 		c.JSON(http.StatusOK, classes)
 	} else {
-		c.JSON(http.StatusBadRequest, make([]string, 0))
+		c.JSON(http.StatusOK, make([]string, 0))
 	}
 }
 
