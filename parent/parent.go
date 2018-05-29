@@ -125,7 +125,7 @@ func GetParentStudents(c *gin.Context) {
 //
 // Output: []StudentParentGrades
 //
-// Example URL: http://localhost:8080/api/v1/parent/students/grades?id=P1&semester=2
+// Example URL: http://localhost:8080/api/v1/parent/students/grades?id=P1&semester=2&studentid=S2
 func GetParentStudentsGrades(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -136,7 +136,12 @@ func GetParentStudentsGrades(c *gin.Context) {
 	var temp m.StudentParentGrades
 	var temp2 m.StudentGradesBySubject
 	semester := c.Query("semester")
-	db.Table("students s, parent_ofs po").Where("po.parent_id = ? and po.student_id = s.username", id).Find(&students)
+	sid := c.Query("studentid")
+	if sid == "" {
+		db.Table("students s, parent_ofs po").Where("po.parent_id = ? and po.student_id = s.username", id).Find(&students)
+	} else {
+		db.Where("username = ?", sid).Find(&students)
+	}
 	if len(students) > 0 {
 		for i := 0; i < len(students); i++ {
 			temp.BasicStudent.StudentID = students[i].Username
