@@ -185,7 +185,7 @@ func GetParentStudentsGrades(c *gin.Context) {
 
 // GetParentPayments returns the pending payments associated with a specific parent.
 //
-// Input: Parent ID, [Status=Pending]
+// Input: Parent ID, [status=1|2] (Status = 1 for pending payments, 2 for completed.)
 //
 // Output: []Payment
 //
@@ -197,7 +197,7 @@ func GetParentPayments(c *gin.Context) {
 	var payments []m.Payment
 	status := c.Query("status")
 	if status != "" {
-		db.Where("parent_id = ? & status = 1", username).Find(&payments)
+		db.Where("parent_id = ? and status = ?", username, status).Find(&payments)
 	} else {
 		db.Where("parent_id = ?", username).Find(&payments)
 	}
