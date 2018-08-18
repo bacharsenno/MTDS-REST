@@ -130,6 +130,7 @@ func SetupRoutes() {
 	admin := R.Group("api/v1/admin")
 	{
 		admin.POST("/", a.PostAdminInfo)
+		admin.GET("/classes", a.GetClasses)
 		admin.POST("/notification", a.PostAdminNotification)
 		admin.POST("/parent", a.PostAdminParent)
 		admin.POST("/payment", a.PostAdminPayment)
