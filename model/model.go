@@ -179,6 +179,13 @@ type ParentOf struct {
 	Status       string `form:"Status" json:"Status"`
 }
 
+// CreditCard is an auxiliary class used for payment processing.
+type CreditCard struct {
+	CCN    string `form:"CCN" json:"CCN"`
+	CCV    string `form:"CCV" json:"CCV"`
+	Expiry string `form:"Expiry" json:"Expiry"`
+}
+
 // ClassSchedule is a custom struct created for JSON construction purposes.
 type ClassSchedule struct {
 	TeachClass `form:"TeachClass" json:"TeachClass"`
@@ -227,6 +234,12 @@ type AppointmentRequest struct {
 	StartTime time.Time `form:"StartTime" json:"StartTime"`
 	EndTime   time.Time `form:"EndTime" json:"EndTime"`
 	Remarks   string    `form:"Remarks" json:"Remarks"`
+}
+
+// PaymentInfo is a custom struct created for JSON construction purposes.
+type PaymentInfo struct {
+	CreditCard `form:"CreditCard" json:"CreditCard"`
+	Payment    `form:"Payment" json:"Payment"`
 }
 
 // PostResponse is the default struct returned as response for any POST request.

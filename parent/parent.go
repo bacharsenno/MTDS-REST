@@ -272,9 +272,9 @@ func PostParentAppointment(c *gin.Context) {
 	c.JSON(http.StatusOK, post)
 }
 
-// PostParentPayment updates the payment details of specified payment associated with the specified parent in the database.
+// PostParentPayment verifies the creditcard details and updates the payment details of specified payment associated with the specified parent in the database.
 //
-// Input: Payment
+// Input: PaymentInfo
 //
 // Output: Post Response
 //
@@ -282,19 +282,27 @@ func PostParentAppointment(c *gin.Context) {
 func PostParentPayment(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
-	var payment m.Payment
+	var paymentInfo m.PaymentInfo
+	c.Bind(&paymentInfo)
+	payment := paymentInfo.Payment
+	creditCard := paymentInfo.CreditCard
 	var post m.PostResponse
-	c.Bind(&payment)
-	if payment.PaymentID == "" || payment.ParentID == "" {
-		var lastPayment m.Payment
-		db.Limit(1).Order("LENGTH(payment_id) desc, payment_id desc").Find(&lastPayment)
-		pid := lastPayment.PaymentID
-		num, _ := strconv.Atoi(s.Trim(pid, "PID"))
-		num++
-		payment.PaymentID = "PID" + strconv.Itoa(num)
+	if len(creditCard.CCN) != 16 {
+		post.Code = 406
+		post.Message = "Invalid CreditCard Number"
+		c.JSON(http.StatusNotAcceptable, post)
+	} else {
+		if payment.PaymentID == "" || payment.ParentID == "" {
+			var lastPayment m.Payment
+			db.Limit(1).Order("LENGTH(payment_id) desc, payment_id desc").Find(&lastPayment)
+			pid := lastPayment.PaymentID
+			num, _ := strconv.Atoi(s.Trim(pid, "PID"))
+			num++
+			payment.PaymentID = "PID" + strconv.Itoa(num)
+		}
+		db.Save(&payment)
+		post.Code = 200
+		post.Message = "Payment updated successfully."
+		c.JSON(http.StatusOK, post)
 	}
-	db.Save(&payment)
-	post.Code = 200
-	post.Message = "Payment updated successfully."
-	c.JSON(http.StatusOK, post)
 }
