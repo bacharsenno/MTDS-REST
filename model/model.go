@@ -181,9 +181,11 @@ type ParentOf struct {
 
 // CreditCard is an auxiliary class used for payment processing.
 type CreditCard struct {
-	CCN    string `form:"CCN" json:"CCN"`
-	CCV    string `form:"CCV" json:"CCV"`
-	Expiry string `form:"Expiry" json:"Expiry"`
+	NameOnCard string `form:"NameOnCard" json:"NameOnCard"`
+	Circuit    string `form:"Circuit" json:"Circuit"`
+	CCN        string `form:"CCN" json:"CCN"`
+	CCV        string `form:"CCV" json:"CCV"`
+	Expiry     string `form:"Expiry" json:"Expiry"`
 }
 
 // ClassSchedule is a custom struct created for JSON construction purposes.
