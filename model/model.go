@@ -184,7 +184,7 @@ type CreditCard struct {
 	NameOnCard string `form:"NameOnCard" json:"NameOnCard"`
 	Circuit    string `form:"Circuit" json:"Circuit"`
 	CCN        string `form:"CCN" json:"CCN"`
-	CCV        string `form:"CCV" json:"CCV"`
+	CVV        string `form:"CVV" json:"CVV"`
 	Expiry     string `form:"Expiry" json:"Expiry"`
 }
 

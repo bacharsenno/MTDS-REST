@@ -299,6 +299,8 @@ func PostParentPayment(c *gin.Context) {
 			num, _ := strconv.Atoi(s.Trim(pid, "PID"))
 			num++
 			payment.PaymentID = "PID" + strconv.Itoa(num)
+		} else {
+			payment.Status = "2"
 		}
 		db.Save(&payment)
 		post.Code = 200
