@@ -110,6 +110,7 @@ func SetupRoutes() {
 		parent.GET("/students", p.GetParentStudents)
 		parent.GET("/students/grades", p.GetParentStudentsGrades)
 		parent.GET("/payments", p.GetParentPayments)
+		parent.GET("/teachings", p.GetParentStudentTeachings)
 		parent.POST("/info", p.PostParentInfo)
 		parent.POST("/appointment", p.PostParentAppointment)
 		parent.POST("/payments", p.PostParentPayment)
