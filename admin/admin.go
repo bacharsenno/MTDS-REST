@@ -189,7 +189,7 @@ func PostAdminPayment(c *gin.Context) {
 	var payment m.Payment
 	var post m.PostResponse
 	c.Bind(&payment)
-	if payment.ParentID == "" {
+	if payment.StudentID == "" {
 		post.Code = 400
 		post.Message = "Missing Parameters"
 		c.JSON(http.StatusBadRequest, post)

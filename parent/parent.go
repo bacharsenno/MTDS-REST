@@ -194,14 +194,18 @@ func GetParentStudentsGrades(c *gin.Context) {
 func GetParentPayments(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
-	username := c.Query("id")
-	var payments []m.Payment
+
+	parentID := c.Query("id")
 	status := c.Query("status")
+
+	var payments []m.Payment
+
 	if status != "" {
-		db.Where("parent_id = ? and status = ?", username, status).Find(&payments)
+		db.Table("payments").Joins("join parent_ofs on parent_ofs.student_id = payments.student_id").Where("parent_ofs.parent_id = ? and payments.status = ?", parentID, status).Scan(&payments)
 	} else {
-		db.Where("parent_id = ?", username).Find(&payments)
+		db.Table("payments").Joins("join parent_ofs on parent_ofs.student_id = payments.student_id").Where("parent_ofs.parent_id = ?", parentID).Scan(&payments)
 	}
+
 	if len(payments) > 0 {
 		c.JSON(http.StatusOK, payments)
 	} else {
