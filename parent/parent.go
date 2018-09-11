@@ -89,10 +89,11 @@ func GetParentAppointments(c *gin.Context) {
 		db.Where("parent_id = ?", username).Find(&appointments)
 	}
 	if len(appointments) > 0 {
+		/*
 		for i := 0; i < len(appointments); i++ {
 			row := db.Table("teachers t").Select("Concat(t.first_name, ' ', t.last_name) as Name").Where("t.username = ?", appointments[i].TeacherID).Row()
 			row.Scan(&appointments[i].TeacherID)
-		}
+		}*/
 		c.JSON(http.StatusOK, appointments)
 	} else {
 		c.JSON(http.StatusOK, make([]string, 0))
@@ -246,6 +247,32 @@ func PostParentInfo(c *gin.Context) {
 		post.Message = "Missing Parameters"
 		c.JSON(http.StatusBadRequest, post)
 	}
+}
+
+// PostAppointmentInfo updates an appointment between a teacher and a parent in the database.
+//
+// Input: Appointment
+//
+// Output: Post Response
+//
+// Example URL: http://localhost:8080/api/v1/parent/appointments
+func PostAppointmentInfo(c *gin.Context) {
+	db := initDb()
+	defer db.Close()
+	var appointment m.Appointment
+	var post m.PostResponse
+	c.Bind(&appointment)
+	if appointment.AppointmentID != 0 {
+		db.Save(&appointment)
+		post.Code = 200
+		post.Message = "Appointment updated successfully."
+		c.JSON(http.StatusOK, post)
+	} else {
+		post.Code = 400
+		post.Message = "Missing Parameter AppointmentID"
+		c.JSON(http.StatusBadRequest, post)
+	}
+	
 }
 
 // PostParentAppointment creates a new appointment between a parent and a teacher in the database.

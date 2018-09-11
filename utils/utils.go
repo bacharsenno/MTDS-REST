@@ -98,7 +98,7 @@ func SetupRoutes() {
 		teacher.GET("/grades", t.GetTeacherClassGrades)
 		teacher.POST("/grades", t.PostTeacherClassGrades)
 		teacher.POST("/info", t.PostTeacherInfo)
-		teacher.POST("/appointments", t.PostAppointmentInfo)
+		teacher.PUT("/appointments", t.PostAppointmentInfo)
 		teacher.POST("/appointment", t.PostTeacherAppointment)
 	}
 
@@ -112,6 +112,7 @@ func SetupRoutes() {
 		parent.GET("/payments", p.GetParentPayments)
 		parent.GET("/teachings", p.GetParentStudentTeachings)
 		parent.POST("/info", p.PostParentInfo)
+		parent.PUT("/appointments", p.PostAppointmentInfo)
 		parent.POST("/appointment", p.PostParentAppointment)
 		parent.POST("/payments", p.PostParentPayment)
 	}

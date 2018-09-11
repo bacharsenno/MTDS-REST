@@ -65,7 +65,7 @@ func GetTeacherNotifications(c *gin.Context) {
 
 // GetTeacherAppointments returns the scheduled appointments for a specific teacher. The scope of the request can be specified (day/week).
 //
-// Input:  Teacher ID, [Scope=day/week/all, default all]
+// Input:  Teacher ID, [Scope=day/week/all, default all], [infoParent=true]
 //
 // Output: []Appointment
 //
@@ -90,11 +90,7 @@ func GetTeacherAppointments(c *gin.Context) {
 	case "all":
 		db.Where("teacher_id = ?", username).Find(&appointments)
 	}
-	if len(appointments) > 0 {
-		for i := 0; i < len(appointments); i++ {
-			row := db.Table("parents p").Select("Concat(p.first_name, ' ', p.last_name) as Name").Where("p.username = ?", appointments[i].ParentID).Row()
-			row.Scan(&appointments[i].ParentID)
-		}
+	if len(appointments) > 0 {	
 		c.JSON(http.StatusOK, appointments)
 	} else {
 		c.JSON(http.StatusOK, make([]string, 0))
