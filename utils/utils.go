@@ -403,7 +403,7 @@ func GenerateTestData(c *gin.Context) {
 			for j := 1; j <= 2; j++ {
 				payment := m.Payment{
 					PaymentID:   "PID" + strconv.Itoa(a),
-					ParentID:    "P" + strconv.Itoa(i),
+					ParentID:    "",
 					StudentID:   "S" + strconv.Itoa(a),
 					Amount:      truncate(r1.Float64()*1000+1000, 2),
 					Deadline:    time.Now().AddDate(0, 1, 0),
