@@ -125,8 +125,9 @@ func SetupRoutes() {
 		parent.GET("/students/:sid/subjects", d.GetStudentSubjects)
 		parent.GET("/students/:sid/grades", p.GetParentStudentsGrades)
 		parent.GET("/payments", p.GetParentPayments)
+		parent.GET("/teachings", p.GetParentStudentTeachings)
 		parent.POST("/info", p.PostParentInfo)
-		parent.POST("/appointments", p.PostParentAppointment)
+		parent.POST("/appointment", p.PostParentAppointment)
 		parent.POST("/payments", p.PostParentPayment)
 	}
 
@@ -143,6 +144,7 @@ func SetupRoutes() {
 	admin := R.Group("api/v1/admin")
 	{
 		admin.POST("/", a.PostAdminInfo)
+		admin.GET("/classes", a.GetClasses)
 		admin.POST("/notification", a.PostAdminNotification)
 		admin.POST("/parent", a.PostAdminParent)
 		admin.POST("/payment", a.PostAdminPayment)

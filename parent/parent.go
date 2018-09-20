@@ -281,7 +281,7 @@ func PostParentInfo(c *gin.Context) {
 //
 // Output: Post Response
 //
-// Example URL: http://localhost:8080/api/v1/parent/appointments
+// Example URL: http://localhost:8080/api/v1/parent/appointment
 func PostParentAppointment(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -326,10 +326,46 @@ func PostParentPayment(c *gin.Context) {
 			num, _ := strconv.Atoi(s.Trim(pid, "PID"))
 			num++
 			payment.PaymentID = "PID" + strconv.Itoa(num)
+		} else {
+			payment.Status = "2"
 		}
 		db.Save(&payment)
 		post.Code = 200
 		post.Message = "Payment updated successfully."
 		c.JSON(http.StatusOK, post)
 	}
+}
+
+// GetParentStudentTeachings returns the list of the teachings for a given student.
+//
+// Input: Parent ID, Student ID
+//
+// Output: []TeachClass
+//
+// Example URL: http://localhost:8080/api/v1/parent/teachings?id=P1&student=S2
+func GetParentStudentTeachings(c *gin.Context) {
+	db := initDb()
+	defer db.Close()
+	username := c.Query("id")
+	var teachings []m.TeachClass
+	studentID := c.Query("student")
+	if username != "" && studentID != "" {
+		db.Raw("select * from testdb.parent_ofs as p "+
+				"join testdb.students as s on s.username = p.student_id "+
+				"join testdb.teach_classes as t on s.class_id = t.class_id "+
+				"where p.parent_id = ? and s.username = ?", username, studentID).Scan(&teachings)
+
+		if len(teachings) > 0 {
+			c.JSON(http.StatusOK, teachings)
+		} else {
+			c.JSON(http.StatusOK, make([]string, 0))
+		}
+
+	} else {
+		var post m.PostResponse
+		post.Code = 400
+		post.Message = "Missing Parameters"
+		c.JSON(http.StatusBadRequest, post)
+	}
+	
 }
