@@ -20,11 +20,11 @@ var initDb = m.InitDb
 //
 // Output: Parent Object
 //
-// Example URL: http://localhost:8080/api/v1/parent/info?id=P1
+// Example URL: http://localhost:8080/api/v1/parent/P1/info
 func GetParentInfo(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
-	username := c.Query("id")
+	username := c.Params.ByName("pid")
 	var parent m.Parent
 	db.Where("username = ?", username).Find(&parent)
 	if parent.Username == "" || parent.FirstName == "" {
@@ -40,11 +40,11 @@ func GetParentInfo(c *gin.Context) {
 //
 // Output: []Notification
 //
-// Example URL: http://localhost:8080/api/v1/parent/notifications?id=P1
+// Example URL: http://localhost:8080/api/v1/parent/P1/notifications?
 func GetParentNotifications(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
-	username := c.Query("id")
+	username := c.Params.ByName("pid")
 	var notifications []m.Notification
 	var students []m.Student
 	db.Table("parent_ofs po, students s").Select("s.*").Where("po.parent_id = ? and po.student_id = s.username", username).Find(&students)
@@ -67,11 +67,11 @@ func GetParentNotifications(c *gin.Context) {
 //
 // Output: []Appointment
 //
-// Example URL: http://localhost:8080/api/v1/parent/appointments?id=P1
+// Example URL: http://localhost:8080/api/v1/parent/P1/appointments
 func GetParentAppointments(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
-	username := c.Query("id")
+	username := c.Params.ByName("pid")
 	scope := c.Query("scope")
 	if scope == "" {
 		scope = "all"
@@ -89,11 +89,14 @@ func GetParentAppointments(c *gin.Context) {
 		db.Where("parent_id = ?", username).Find(&appointments)
 	}
 	if len(appointments) > 0 {
+		var objectsWithLink []m.AppointmentWithLink
+		var tempObj m.AppointmentWithLink
 		for i := 0; i < len(appointments); i++ {
-			row := db.Table("teachers t").Select("Concat(t.first_name, ' ', t.last_name) as Name").Where("t.username = ?", appointments[i].TeacherID).Row()
-			row.Scan(&appointments[i].TeacherID)
+			tempObj.Appointment = appointments[i]
+			tempObj.Link = "http://localhost:8080/api/v1/teacher/" + appointments[i].TeacherID + "/info"
+			objectsWithLink = append(objectsWithLink, tempObj)
 		}
-		c.JSON(http.StatusOK, appointments)
+		c.JSON(http.StatusOK, objectsWithLink)
 	} else {
 		c.JSON(http.StatusOK, make([]string, 0))
 	}
@@ -105,15 +108,22 @@ func GetParentAppointments(c *gin.Context) {
 //
 // Output: []Student
 //
-// Example URL: http://localhost:8080/api/v1/parent/students?id=P1
+// Example URL: http://localhost:8080/api/v1/parent/P1/students
 func GetParentStudents(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
-	username := c.Query("id")
+	username := c.Params.ByName("pid")
 	var students []m.Student
 	db.Table("students s, parent_ofs po").Where("po.parent_id = ? and po.student_id = s.username", username).Find(&students)
 	if len(students) > 0 {
-		c.JSON(http.StatusOK, students)
+		var objectsWithLink []m.StudentWithLink
+		var tempObj m.StudentWithLink
+		for i := 0; i < len(students); i++ {
+			tempObj.Student = students[i]
+			tempObj.Link = "http://localhost:8080/api/v1/student/" + students[i].Username + "/info"
+			objectsWithLink = append(objectsWithLink, tempObj)
+		}
+		c.JSON(http.StatusOK, objectsWithLink)
 	} else {
 		c.JSON(http.StatusOK, make([]string, 0))
 	}
@@ -125,18 +135,18 @@ func GetParentStudents(c *gin.Context) {
 //
 // Output: []StudentParentGrades
 //
-// Example URL: http://localhost:8080/api/v1/parent/students/grades?id=P1&semester=2&studentid=S2
+// Example URL: http://localhost:8080/api/v1/parent/P1/students/S2/grades?semester=2
 func GetParentStudentsGrades(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
-	id := c.Query("id")
+	id := c.Params.ByName("pid")
 	var students []m.Student
 	var studentParentGrades []m.StudentParentGrades
 	var grades []m.Grade
 	var temp m.StudentParentGrades
 	var temp2 m.StudentGradesBySubject
 	semester := c.Query("semester")
-	sid := c.Query("studentid")
+	sid := c.Params.ByName("sid")
 	if sid == "" {
 		db.Table("students s, parent_ofs po").Where("po.parent_id = ? and po.student_id = s.username", id).Find(&students)
 	} else {
@@ -148,6 +158,7 @@ func GetParentStudentsGrades(c *gin.Context) {
 			temp.BasicStudent.FirstName = students[i].FirstName
 			temp.BasicStudent.LastName = students[i].LastName
 			temp.BasicStudent.ProfilePic = students[i].ProfilePic
+			temp.BasicStudent.Link = "http://localhost:8080/api/v1/student/" + students[i].Username + "/info"
 			if semester != "" {
 				sem, _ := strconv.Atoi(semester)
 				db.Where("student_id = ? and semester = ?", students[i].Username, sem).Order("length(subject), subject").Find(&grades)
@@ -157,6 +168,7 @@ func GetParentStudentsGrades(c *gin.Context) {
 			sub := grades[0].Subject
 			temp2.Subject = sub
 			for j := 0; j < len(grades); j++ {
+				grades[j].Link = "http://localhost:8080/api/v1/teacher/" + grades[j].TeacherID + "/info"
 				if grades[j].Subject == sub {
 					temp2.Grades = append(temp2.Grades, grades[j])
 					if j == len(grades)-1 {
@@ -189,20 +201,35 @@ func GetParentStudentsGrades(c *gin.Context) {
 //
 // Output: []Payment
 //
-// Example URL: http://localhost:8080/api/v1/parent/payments&id=P1&status=pending
+// Example URL: http://localhost:8080/api/v1/parent/P1/payments?status=pending
 func GetParentPayments(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
-	username := c.Query("id")
+	username := c.Params.ByName("pid")
+
 	var payments []m.Payment
-	status := c.Query("status")
+	var status string
+	if c.Query("status") == "pending" || c.Query("status") == "1" {
+		status = "1"
+	} else if c.Query("status") == "completed" || c.Query("status") == "2" {
+		status = "2"
+	} else {
+		status = ""
+	}
 	if status != "" {
 		db.Where("parent_id = ? and status = ?", username, status).Find(&payments)
 	} else {
 		db.Where("parent_id = ?", username).Find(&payments)
 	}
 	if len(payments) > 0 {
-		c.JSON(http.StatusOK, payments)
+		var objectsWithLink []m.PaymentWithLink
+		var tempObj m.PaymentWithLink
+		for i := 0; i < len(payments); i++ {
+			tempObj.Payment = payments[i]
+			tempObj.Link = "http://localhost:8080/api/v1/student/" + payments[i].StudentID + "/info"
+			objectsWithLink = append(objectsWithLink, tempObj)
+		}
+		c.JSON(http.StatusOK, objectsWithLink)
 	} else {
 		c.JSON(http.StatusOK, make([]string, 0))
 	}

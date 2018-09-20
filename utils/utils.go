@@ -17,7 +17,10 @@ import (
 	s "strings"
 	"time"
 
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
+	csrf "github.com/utrack/gin-csrf"
 	// Imported for authentication purposes
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/pjebs/restgate"
@@ -81,14 +84,24 @@ func Cors() gin.HandlerFunc {
 func SetupRoutes() {
 
 	R.Use(Cors())
-	//R.Use(rgAdapter)
+	R.Use(rgAdapter)
+	store := cookie.NewStore([]byte("secret"))
+	R.Use(sessions.Sessions("cookie", store))
 	R.Use(gin.Recovery())
-	login := R.Group("api/v1/login")
-	{
-		login.POST("/", PostLogin)
-	}
+	R.Use(csrf.Middleware(csrf.Options{
+		Secret: "secret123",
+		ErrorFunc: func(c *gin.Context) {
+			c.String(400, "CSRF token mismatch")
+			c.Abort()
+		},
+	}))
+	R.GET("/protected", func(c *gin.Context) {
+		c.String(200, csrf.GetToken(c))
+	})
 
-	teacher := R.Group("api/v1/teacher")
+	R.POST("api/v1/login", PostLogin)
+
+	teacher := R.Group("api/v1/teacher/:tid")
 	{
 		teacher.GET("/info", t.GetTeacherInfo)
 		teacher.GET("/notifications", t.GetTeacherNotifications)
@@ -102,28 +115,28 @@ func SetupRoutes() {
 		teacher.POST("/appointment", t.PostTeacherAppointment)
 	}
 
-	parent := R.Group("api/v1/parent")
+	parent := R.Group("api/v1/parent/:pid")
 	{
 		parent.GET("/info", p.GetParentInfo)
 		parent.GET("/notifications", p.GetParentNotifications)
 		parent.GET("/appointments", p.GetParentAppointments)
 		parent.GET("/students", p.GetParentStudents)
-		parent.GET("/students/grades", p.GetParentStudentsGrades)
+		parent.GET("/students/:sid", d.GetStudentInfo)
+		parent.GET("/students/:sid/subjects", d.GetStudentSubjects)
+		parent.GET("/students/:sid/grades", p.GetParentStudentsGrades)
 		parent.GET("/payments", p.GetParentPayments)
 		parent.POST("/info", p.PostParentInfo)
 		parent.POST("/appointments", p.PostParentAppointment)
 		parent.POST("/payments", p.PostParentPayment)
 	}
 
-	class := R.Group("api/v1/class")
-	{
-		class.GET("/students", d.GetClassStudents)
-	}
+	R.GET("api/v1/class/:cid/students", d.GetClassStudents)
 
-	student := R.Group("api/v1/student")
+	student := R.Group("api/v1/student/:sid")
 	{
 		student.GET("/info", d.GetStudentInfo)
 		student.GET("/grades", d.GetStudentGrades)
+		student.GET("/parents", d.GetStudentParents)
 		student.POST("/info", d.PostStudentInfo)
 	}
 
@@ -137,10 +150,8 @@ func SetupRoutes() {
 		admin.POST("/teacher", a.PostAdminTeacher)
 	}
 
-	test := R.Group("api/v1/test")
-	{
-		test.GET("/", GenerateTestData)
-	}
+	R.GET("api/v1/test", GenerateTestData)
+
 }
 
 // GenerateTestData is an automated data-generation function that generates 10 teachers, 100 parents, 200 students, classes, schedules,
@@ -498,6 +509,17 @@ func PostLogin(c *gin.Context) {
 	defer db.Close()
 	var user m.User
 	c.Bind(&user)
+	session := sessions.Default(c)
+	var count int
+	v := session.Get("count")
+	if v == nil {
+		count = 0
+	} else {
+		count = v.(int)
+		count++
+	}
+	session.Set("count", count)
+	session.Save()
 	username := user.Username
 	password := user.Password
 	var dbUser m.User

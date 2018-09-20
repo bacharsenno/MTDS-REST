@@ -21,13 +21,13 @@ var initDb = m.InitDb
 //
 // Output: Teacher Object
 //
-// Example URL: http://localhost:8080/api/v1/teacher/info?id=T1
+// Example URL: http://localhost:8080/api/v1/teacher/T1/info
 func GetTeacherInfo(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
-	username := c.Query("id")
+	id := c.Params.ByName("tid")
 	var teacher m.Teacher
-	db.Where("username = ?", username).First(&teacher)
+	db.Where("username = ?", id).First(&teacher)
 	if teacher.Username == "" || teacher.FirstName == "" {
 		c.JSON(http.StatusBadRequest, nil)
 	} else {
@@ -45,7 +45,7 @@ func GetTeacherInfo(c *gin.Context) {
 func GetTeacherNotifications(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
-	username := c.Query("id")
+	username := c.Params.ByName("tid")
 	var notifications []m.Notification
 	var teachClasses []m.TeachClass
 	var classes []string
@@ -69,11 +69,11 @@ func GetTeacherNotifications(c *gin.Context) {
 //
 // Output: []Appointment
 //
-// Example URL: http://localhost:8080/api/v1/teacher/appointments?id=T1
+// Example URL: http://localhost:8080/api/v1/teacher/T1/appointments
 func GetTeacherAppointments(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
-	username := c.Query("id")
+	username := c.Params.ByName("tid")
 	scope := c.Query("scope")
 	if scope == "" {
 		scope = "all"
@@ -91,11 +91,14 @@ func GetTeacherAppointments(c *gin.Context) {
 		db.Where("teacher_id = ?", username).Find(&appointments)
 	}
 	if len(appointments) > 0 {
+		var objectsWithLink []m.AppointmentWithLink
+		var tempObj m.AppointmentWithLink
 		for i := 0; i < len(appointments); i++ {
-			row := db.Table("parents p").Select("Concat(p.first_name, ' ', p.last_name) as Name").Where("p.username = ?", appointments[i].ParentID).Row()
-			row.Scan(&appointments[i].ParentID)
+			tempObj.Appointment = appointments[i]
+			tempObj.Link = "http://localhost:8080/api/v1/parent/" + appointments[i].ParentID + "/info"
+			objectsWithLink = append(objectsWithLink, tempObj)
 		}
-		c.JSON(http.StatusOK, appointments)
+		c.JSON(http.StatusOK, objectsWithLink)
 	} else {
 		c.JSON(http.StatusOK, make([]string, 0))
 	}
@@ -107,11 +110,11 @@ func GetTeacherAppointments(c *gin.Context) {
 //
 // Output: []ClassSchedule
 //
-// Example URL: http://localhost:8080/api/v1/teacher/agenda?id=T1&scope=day&semester=2&class=C3
+// Example URL: http://localhost:8080/api/v1/teacher/T1/agenda?semester=2&class=C3
 func GetTeacherAgenda(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
-	username := c.Query("id")
+	username := c.Params.ByName("tid")
 	class := c.Query("class")
 	scope := c.Query("scope")
 	if scope == "" {
@@ -124,6 +127,7 @@ func GetTeacherAgenda(c *gin.Context) {
 	var teachClasses []m.TeachClass
 	var schedules []m.Schedule
 	var classSchedules []m.ClassSchedule
+	var temptc m.TeachClassWithLink
 	currentDay := time.Now().Weekday().String()
 	condition := ""
 	if class != "" {
@@ -142,9 +146,11 @@ func GetTeacherAgenda(c *gin.Context) {
 			} else if scope == "week" {
 				db.Where("schedule_id = ? and semester = ?", teachClasses[i].ScheduleID, semester).Find(&schedules)
 			}
+			temptc.TeachClass = teachClasses[i]
+			temptc.Link = "http://localhost:8080/api/v1/teacher/" + teachClasses[i].TeacherID + "/classes?class=" + teachClasses[i].ClassID
 			temp := m.ClassSchedule{
-				TeachClass: teachClasses[i],
-				Time:       schedules,
+				TeachClassWithLink: temptc,
+				Time:               schedules,
 			}
 			classSchedules = append(classSchedules, temp)
 		}
@@ -160,12 +166,14 @@ func GetTeacherAgenda(c *gin.Context) {
 //
 // Output: []Classes
 //
-// Example URL: http://localhost:8080/api/v1/teacher/classes?id=T1
+// Example URL: http://localhost:8080/api/v1/teacher/T1/classes
 func GetTeacherClasses(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
 	var classes []m.TeachClass
-	username := c.Query("id")
+	var tcWithLink []m.TeachClassWithLink
+	var tmp m.TeachClassWithLink
+	username := c.Params.ByName("tid")
 	class := c.Query("class")
 	if class != "" {
 		db.Where("teacher_id = ? AND class_id = ?", username, class).Find(&classes)
@@ -173,7 +181,12 @@ func GetTeacherClasses(c *gin.Context) {
 		db.Where("teacher_id = ?", username).Order("LENGTH(class_id), class_id").Find(&classes)
 	}
 	if len(classes) > 0 {
-		c.JSON(http.StatusOK, classes)
+		for i := 0; i < len(classes); i++ {
+			tmp.TeachClass = classes[i]
+			tmp.Link = "http://localhost:8080/api/v1/teacher/" + username + "/agenda?class=" + classes[i].ClassID
+			tcWithLink = append(tcWithLink, tmp)
+		}
+		c.JSON(http.StatusOK, tcWithLink)
 	} else {
 		c.JSON(http.StatusOK, make([]string, 0))
 	}
@@ -185,11 +198,11 @@ func GetTeacherClasses(c *gin.Context) {
 //
 // Output: []StudentWithGrades
 //
-// Example URL: http://localhost:8080/api/v1/teacher/grades?id=T1&class=C3&semester=2
+// Example URL: http://localhost:8080/api/v1/teacher/T1/grades?class=C3&semester=2
 func GetTeacherClassGrades(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
-	id := c.Query("id")
+	id := c.Params.ByName("tid")
 	class := c.Query("class")
 	var studentsWithGrades []m.StudentWithGrade
 	var swgtemp m.StudentWithGrade
@@ -201,12 +214,18 @@ func GetTeacherClassGrades(c *gin.Context) {
 			swgtemp.BasicStudent.FirstName = classStudents[i].FirstName
 			swgtemp.BasicStudent.LastName = classStudents[i].LastName
 			swgtemp.BasicStudent.ProfilePic = classStudents[i].ProfilePic
+			swgtemp.BasicStudent.Link = "http://localhost:8080/api/v1/student/" + classStudents[i].Username + "/info"
 			semester := c.Query("semester")
 			if semester == "" {
 				db.Where("teacher_id = ? and student_id = ? and year = ?", id, classStudents[i].Username, time.Now().Year()).Find(&swgtemp.Grades)
 			} else {
 				sem, _ := strconv.Atoi(semester)
 				db.Where("teacher_id = ? and student_id = ? and year = ? and semester = ?", id, classStudents[i].Username, time.Now().Year(), sem).Find(&swgtemp.Grades)
+			}
+			for j := 0; j < len(swgtemp.Grades); j++ {
+				var parent m.ParentOf
+				db.Where("student_id = ?", classStudents[i].Username).First(&parent)
+				swgtemp.Grades[j].Link = "http://localhost:8080/api/v1/parent/" + parent.ParentID + "/info"
 			}
 			db.Where("teacher_id = ? and student_id = ? and year = ?", id, classStudents[i].Username, time.Now().Year()).Find(&swgtemp.GradeSummaries)
 			studentsWithGrades = append(studentsWithGrades, swgtemp)

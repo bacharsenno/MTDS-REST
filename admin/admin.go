@@ -176,9 +176,9 @@ func PostAdminTeacher(c *gin.Context) {
 	}
 }
 
-// PostAdminPayment creates/updates a notification.
+// PostAdminPayment creates/updates a payment.
 //
-// Input: Notification Object
+// Input: Payment Object
 //
 // Output: Post Response
 //
@@ -189,7 +189,7 @@ func PostAdminPayment(c *gin.Context) {
 	var payment m.Payment
 	var post m.PostResponse
 	c.Bind(&payment)
-	if payment.ParentID == "" {
+	if payment.StudentID == "" {
 		post.Code = 400
 		post.Message = "Missing Parameters"
 		c.JSON(http.StatusBadRequest, post)

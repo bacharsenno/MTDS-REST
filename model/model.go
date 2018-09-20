@@ -83,6 +83,7 @@ type Grade struct {
 	Date      time.Time `form:"Date" json:"Date"`
 	Grade     float64   `form:"Grade" json:"Grade"`
 	Remarks   string    `form:"Remarks" json:"Remarks"`
+	Link      string    `form:"Link" json:"Link"`
 }
 
 // GradeSummary is the struct containing all related info, representing the overall performance of a student in a specific course for a specific semester. Fields are self-explanatory.
@@ -190,8 +191,8 @@ type CreditCard struct {
 
 // ClassSchedule is a custom struct created for JSON construction purposes.
 type ClassSchedule struct {
-	TeachClass `form:"TeachClass" json:"TeachClass"`
-	Time       []Schedule `form:"Schedule" json:"Schedule"`
+	TeachClassWithLink `form:"TeachClassWithLink" json:"TeachClassWithLink"`
+	Time               []Schedule `form:"Schedule" json:"Schedule"`
 }
 
 // BasicStudent is a custom struct created for JSON construction purposes.
@@ -200,6 +201,7 @@ type BasicStudent struct {
 	FirstName  string `form:"FirstName" json:"FirstName"`
 	LastName   string `form:"LastName" json:"LastName"`
 	ProfilePic string `form:"ProfilePic" json:"ProfilePic"`
+	Link       string `form:"Link" json:"Link"`
 }
 
 // StudentWithGrade is a custom struct created for JSON construction purposes.
@@ -242,6 +244,36 @@ type AppointmentRequest struct {
 type PaymentInfo struct {
 	CreditCard `form:"CreditCard" json:"CreditCard"`
 	Payment    `form:"Payment" json:"Payment"`
+}
+
+// AppointmentWithLink is Appointment object with deeplink
+type AppointmentWithLink struct {
+	Appointment `form:"Appointment" json:"Appointment"`
+	Link        string `form:"Link" json:"Link"`
+}
+
+// StudentWithLink is Student object with deeplink
+type StudentWithLink struct {
+	Student `form:"Student" json:"Student"`
+	Link    string `form:"Link" json:"Link"`
+}
+
+// ParentWithLink is Parent object with deeplink
+type ParentWithLink struct {
+	ParentOf `form:"Parent" json:"Parent"`
+	Link     string `form:"Link" json:"Link"`
+}
+
+// TeachClassWithLink is TeachClass object with deeplink
+type TeachClassWithLink struct {
+	TeachClass `form:"TeachClass" json:"TeachClass"`
+	Link       string `form:"Link" json:"Link"`
+}
+
+// PaymentWithLink is Payment object with deeplink
+type PaymentWithLink struct {
+	Payment `form:"Payment" json:"Payment"`
+	Link    string `form:"Link" json:"Link"`
 }
 
 // PostResponse is the default struct returned as response for any POST request.
