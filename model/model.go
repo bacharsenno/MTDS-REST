@@ -170,9 +170,9 @@ type TeachClass struct {
 
 // Class contains the details of classes. Fields are self-explanatory.
 type Class struct {
-	ClassID    string `gorm:"PRIMARY_KEY" form:"ClassID" json:"ClassID"`
-	Location   string `form:"Location" json:"Location"`
-	Year       string `form:"Year" json:"Year"`
+	ClassID  string `gorm:"PRIMARY_KEY" form:"ClassID" json:"ClassID"`
+	Location string `form:"Location" json:"Location"`
+	Year     string `form:"Year" json:"Year"`
 }
 
 // ParentOf defines the parent-child relationships between parents and students.

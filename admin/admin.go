@@ -1,3 +1,4 @@
+// Package admin contains methods related to admin functionalities
 package admin
 
 import (
@@ -206,32 +207,5 @@ func PostAdminPayment(c *gin.Context) {
 		post.Code = 200
 		post.Message = "Payment created/updated successfully."
 		c.JSON(http.StatusOK, post)
-	}
-}
-
-// GetClasses returns the list of all the classes.
-//
-// Input: [Class ID]
-//
-// Output: []Classes
-//
-// Example URL: http://localhost:8080/api/v1/admin/classes
-func GetClasses(c *gin.Context) {
-	db := initDb()
-	defer db.Close()
-	//var teachClasses []m.TeachClass
-	var classes []m.Class
-	class := c.Query("class")
-	if class != "" {
-		//db.Group("class_id").Where("class_id = ?", class).Find(&teachClasses)
-		db.Table("teach_classes").Select("class_id, location, year").Group("class_id").Where("class_id = ?", class).Order("LENGTH(class_id), class_id").Scan(&classes)
-	} else {
-		//db.Group("class_id").Order("LENGTH(class_id), class_id").Find(&teachClasses)
-		db.Table("teach_classes").Select("class_id, location, year").Group("class_id").Order("LENGTH(class_id), class_id").Scan(&classes)
-	}
-	if len(classes) > 0 {
-		c.JSON(http.StatusOK, classes)
-	} else {
-		c.JSON(http.StatusOK, make([]string, 0))
 	}
 }

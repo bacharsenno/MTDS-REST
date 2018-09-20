@@ -275,7 +275,7 @@ func PostParentInfo(c *gin.Context) {
 	}
 }
 
-// PostParentAppointment creates a new appointment between a parent and a teacher in the database.
+// PostParentAppointment create or updates an appointment between a parent and a teacher in the database.
 //
 // Input: Appointment
 //
@@ -334,38 +334,4 @@ func PostParentPayment(c *gin.Context) {
 		post.Message = "Payment updated successfully."
 		c.JSON(http.StatusOK, post)
 	}
-}
-
-// GetParentStudentTeachings returns the list of the teachings for a given student.
-//
-// Input: Parent ID, Student ID
-//
-// Output: []TeachClass
-//
-// Example URL: http://localhost:8080/api/v1/parent/teachings?id=P1&student=S2
-func GetParentStudentTeachings(c *gin.Context) {
-	db := initDb()
-	defer db.Close()
-	username := c.Query("id")
-	var teachings []m.TeachClass
-	studentID := c.Query("student")
-	if username != "" && studentID != "" {
-		db.Raw("select * from testdb.parent_ofs as p "+
-				"join testdb.students as s on s.username = p.student_id "+
-				"join testdb.teach_classes as t on s.class_id = t.class_id "+
-				"where p.parent_id = ? and s.username = ?", username, studentID).Scan(&teachings)
-
-		if len(teachings) > 0 {
-			c.JSON(http.StatusOK, teachings)
-		} else {
-			c.JSON(http.StatusOK, make([]string, 0))
-		}
-
-	} else {
-		var post m.PostResponse
-		post.Code = 400
-		post.Message = "Missing Parameters"
-		c.JSON(http.StatusBadRequest, post)
-	}
-	
 }
