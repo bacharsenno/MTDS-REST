@@ -50,7 +50,7 @@ func PostAdminNotification(c *gin.Context) {
 	var notification m.Notification
 	var post m.PostResponse
 	c.Bind(&notification)
-	if notification.StartDate.Before(time.Now()) || notification.EndDate.Before(time.Now()) {
+	if !notification.StartDate.Before(time.Now()) || !notification.EndDate.Before(time.Now()) {
 		post.Code = 400
 		post.Message = "StartDate/EndDate shouldn't be in the past"
 		c.JSON(http.StatusBadRequest, post)
@@ -194,7 +194,7 @@ func PostAdminPayment(c *gin.Context) {
 		post.Message = "Missing Parameters"
 		c.JSON(http.StatusBadRequest, post)
 	} else {
-		if payment.PaymentID == "" {
+		if payment.StudentID == "" {
 			var lastPayment m.Payment
 			db.Limit(1).Order("LENGTH(payment_id) desc, payment_id desc").Find(&lastPayment)
 			pid := lastPayment.PaymentID
