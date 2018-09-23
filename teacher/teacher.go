@@ -26,12 +26,14 @@ func GetTeacherInfo(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
 	id := c.Params.ByName("tid")
+	
 	var teacher m.Teacher
-	db.Where("username = ?", id).First(&teacher)
-	if teacher.Username == "" || teacher.FirstName == "" {
-		c.JSON(http.StatusBadRequest, nil)
-	} else {
+	
+	if m.IsAuthorized(c, db, id) {
+		db.Where("username = ?", id).First(&teacher)
 		c.JSON(http.StatusOK, teacher)
+	} else {
+		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
 	}
 }
 
@@ -367,3 +369,4 @@ func PostTeacherAppointment(c *gin.Context) {
 	}
 	c.String(http.StatusOK, "Appointment created/updated successfully.")
 }
+

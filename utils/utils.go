@@ -21,7 +21,7 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
-	csrf "github.com/utrack/gin-csrf"
+	/*csrf "github.com/utrack/gin-csrf"*/
 	// Imported for authentication purposes
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/pjebs/restgate"
@@ -89,7 +89,7 @@ func SetupRoutes() {
 	store := cookie.NewStore([]byte("secret"))
 	R.Use(sessions.Sessions("cookie", store))
 	R.Use(gin.Recovery())
-	R.Use(csrf.Middleware(csrf.Options{
+	/*R.Use(csrf.Middleware(csrf.Options{
 		Secret: "secret123",
 		ErrorFunc: func(c *gin.Context) {
 			c.String(400, "CSRF token mismatch")
@@ -98,7 +98,7 @@ func SetupRoutes() {
 	}))
 	R.GET("/protected", func(c *gin.Context) {
 		c.String(200, csrf.GetToken(c))
-	})
+	})*/
 
 	R.POST("api/v1/login", PostLogin)
 
@@ -542,3 +542,4 @@ func PostLogin(c *gin.Context) {
 func truncate(x float64, n int) float64 {
 	return math.Floor(x*math.Pow(10, float64(n))) * math.Pow(10, -float64(n))
 }
+
