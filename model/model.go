@@ -374,3 +374,18 @@ func IsAuthorized(c *gin.Context, db *gorm.DB, paramId string) bool {
 		return false
 	}
 }
+
+// isAuthorized check if the logged user is authorized to access the required resource according to its type
+func IsAuthorizedUserType(c *gin.Context, db *gorm.DB, userType int) bool {
+	requestKey := c.GetHeader("X-Auth-Key");
+	
+	var user User
+	db.Where("username = ?", requestKey).First(&user)
+
+	//if the logged user is an Admin or its id correspond to the one on the request returns true
+	if user.Type == 0 || user.Type == userType {
+		return true
+	} else {
+		return false
+	}
+}

@@ -26,15 +26,20 @@ func PostAdminInfo(c *gin.Context) {
 	var user m.User
 	var post m.PostResponse
 	c.Bind(&user)
-	if user.Type == 0 {
-		db.Save(&user)
-		post.Code = 200
-		post.Message = "Admin Created/Updated Successfully"
-		c.JSON(http.StatusOK, post)
+
+	if m.IsAuthorizedUserType(c, db, 0){
+		if user.Type == 0 {
+			db.Save(&user)
+			post.Code = 200
+			post.Message = "Admin Created/Updated Successfully"
+			c.JSON(http.StatusOK, post)
+		} else {
+			post.Code = 400
+			post.Message = "Type should be 0"
+			c.JSON(http.StatusBadRequest, post)
+		}
 	} else {
-		post.Code = 400
-		post.Message = "Type should be 0"
-		c.JSON(http.StatusBadRequest, post)
+		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
 	}
 }
 
@@ -51,15 +56,20 @@ func PostAdminNotification(c *gin.Context) {
 	var notification m.Notification
 	var post m.PostResponse
 	c.Bind(&notification)
-	if notification.StartDate.Before(time.Now()) || notification.EndDate.Before(time.Now()) {
-		post.Code = 400
-		post.Message = "StartDate/EndDate shouldn't be in the past"
-		c.JSON(http.StatusBadRequest, post)
+
+	if m.IsAuthorizedUserType(c, db, 0){
+		if notification.StartDate.Before(time.Now()) || notification.EndDate.Before(time.Now()) {
+			post.Code = 400
+			post.Message = "StartDate/EndDate shouldn't be in the past"
+			c.JSON(http.StatusBadRequest, post)
+		} else {
+			db.Save(&notification)
+			post.Code = 200
+			post.Message = "Notification Added Successfully."
+			c.JSON(http.StatusOK, post)
+		}
 	} else {
-		db.Save(&notification)
-		post.Code = 200
-		post.Message = "Notification Added Successfully."
-		c.JSON(http.StatusOK, post)
+		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
 	}
 }
 
@@ -76,24 +86,29 @@ func PostAdminStudent(c *gin.Context) {
 	var student m.Student
 	var post m.PostResponse
 	c.Bind(&student)
-	if student.FirstName == "" || student.LastName == "" || student.ClassID == "" {
-		post.Code = 400
-		post.Message = "Missing Parameters"
-		c.JSON(http.StatusBadRequest, post)
-	} else {
-		if student.Username == "" {
-			var lastStudent m.Student
-			db.Limit(1).Order("LENGTH(username) desc, username desc").Find(&lastStudent)
-			id := lastStudent.Username
-			id = s.Trim(id, "S")
-			num, _ := strconv.Atoi(id)
-			num++
-			student.Username = "S" + strconv.Itoa(num)
+
+	if m.IsAuthorizedUserType(c, db, 0){
+		if student.FirstName == "" || student.LastName == "" || student.ClassID == "" {
+			post.Code = 400
+			post.Message = "Missing Parameters"
+			c.JSON(http.StatusBadRequest, post)
+		} else {
+			if student.Username == "" {
+				var lastStudent m.Student
+				db.Limit(1).Order("LENGTH(username) desc, username desc").Find(&lastStudent)
+				id := lastStudent.Username
+				id = s.Trim(id, "S")
+				num, _ := strconv.Atoi(id)
+				num++
+				student.Username = "S" + strconv.Itoa(num)
+			}
+			db.Save(&student)
+			post.Code = 200
+			post.Message = "Student added/updated successfully."
+			c.JSON(http.StatusOK, post)
 		}
-		db.Save(&student)
-		post.Code = 200
-		post.Message = "Student added/updated successfully."
-		c.JSON(http.StatusOK, post)
+	} else {
+		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
 	}
 }
 
@@ -110,30 +125,35 @@ func PostAdminParent(c *gin.Context) {
 	var parent m.Parent
 	var post m.PostResponse
 	c.Bind(&parent)
-	if parent.FirstName != "" && parent.LastName != "" && parent.Email != "" {
-		if parent.Username == "" {
-			var lastParent m.Parent
-			db.Limit(1).Order("LENGTH(username) desc, username desc").Find(&lastParent)
-			id := lastParent.Username
-			id = s.Trim(id, "P")
-			num, _ := strconv.Atoi(id)
-			num++
-			parent.Username = "P" + strconv.Itoa(num)
-			user := m.User{
-				Username: parent.Username,
-				Password: "PP" + strconv.Itoa(num),
-				Type:     2,
+
+	if m.IsAuthorizedUserType(c, db, 0){
+		if parent.FirstName != "" && parent.LastName != "" && parent.Email != "" {
+			if parent.Username == "" {
+				var lastParent m.Parent
+				db.Limit(1).Order("LENGTH(username) desc, username desc").Find(&lastParent)
+				id := lastParent.Username
+				id = s.Trim(id, "P")
+				num, _ := strconv.Atoi(id)
+				num++
+				parent.Username = "P" + strconv.Itoa(num)
+				user := m.User{
+					Username: parent.Username,
+					Password: "PP" + strconv.Itoa(num),
+					Type:     2,
+				}
+				db.Save(&user)
 			}
-			db.Save(&user)
+			db.Save(&parent)
+			post.Code = 200
+			post.Message = "Parent created/updated successfully."
+			c.JSON(http.StatusOK, post)
+		} else {
+			post.Code = 400
+			post.Message = "Missing Parameters"
+			c.JSON(http.StatusBadRequest, post)
 		}
-		db.Save(&parent)
-		post.Code = 200
-		post.Message = "Parent created/updated successfully."
-		c.JSON(http.StatusOK, post)
 	} else {
-		post.Code = 400
-		post.Message = "Missing Parameters"
-		c.JSON(http.StatusBadRequest, post)
+		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
 	}
 }
 
@@ -150,30 +170,35 @@ func PostAdminTeacher(c *gin.Context) {
 	var teacher m.Teacher
 	var post m.PostResponse
 	c.Bind(&teacher)
-	if teacher.FirstName != "" && teacher.LastName != "" && teacher.ProfilePic != "" {
-		if teacher.Username == "" {
-			var lastTeacher m.Teacher
-			db.Limit(1).Order("LENGTH(username) desc, username desc").Find(&lastTeacher)
-			id := lastTeacher.Username
-			id = s.Trim(id, "T")
-			num, _ := strconv.Atoi(id)
-			num++
-			teacher.Username = "T" + strconv.Itoa(num)
-			user := m.User{
-				Username: teacher.Username,
-				Password: "TP" + strconv.Itoa(num),
-				Type:     1,
+
+	if m.IsAuthorizedUserType(c, db, 0){
+		if teacher.FirstName != "" && teacher.LastName != "" && teacher.ProfilePic != "" {
+			if teacher.Username == "" {
+				var lastTeacher m.Teacher
+				db.Limit(1).Order("LENGTH(username) desc, username desc").Find(&lastTeacher)
+				id := lastTeacher.Username
+				id = s.Trim(id, "T")
+				num, _ := strconv.Atoi(id)
+				num++
+				teacher.Username = "T" + strconv.Itoa(num)
+				user := m.User{
+					Username: teacher.Username,
+					Password: "TP" + strconv.Itoa(num),
+					Type:     1,
+				}
+				db.Save(&user)
 			}
-			db.Save(&user)
+			db.Save(&teacher)
+			post.Code = 200
+			post.Message = "Teacher created/updated successfully."
+			c.JSON(http.StatusOK, post)
+		} else {
+			post.Code = 400
+			post.Message = "Missing Parameters"
+			c.JSON(http.StatusBadRequest, post)
 		}
-		db.Save(&teacher)
-		post.Code = 200
-		post.Message = "Teacher created/updated successfully."
-		c.JSON(http.StatusOK, post)
 	} else {
-		post.Code = 400
-		post.Message = "Missing Parameters"
-		c.JSON(http.StatusBadRequest, post)
+		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
 	}
 }
 
@@ -190,22 +215,27 @@ func PostAdminPayment(c *gin.Context) {
 	var payment m.Payment
 	var post m.PostResponse
 	c.Bind(&payment)
-	if payment.StudentID == "" {
-		post.Code = 400
-		post.Message = "Missing Parameters"
-		c.JSON(http.StatusBadRequest, post)
-	} else {
-		if payment.PaymentID == "" {
-			var lastPayment m.Payment
-			db.Limit(1).Order("LENGTH(payment_id) desc, payment_id desc").Find(&lastPayment)
-			pid := lastPayment.PaymentID
-			num, _ := strconv.Atoi(s.Trim(pid, "PID"))
-			num++
-			payment.PaymentID = "PID" + strconv.Itoa(num)
+
+	if m.IsAuthorizedUserType(c, db, 0){
+		if payment.StudentID == "" {
+			post.Code = 400
+			post.Message = "Missing Parameters"
+			c.JSON(http.StatusBadRequest, post)
+		} else {
+			if payment.PaymentID == "" {
+				var lastPayment m.Payment
+				db.Limit(1).Order("LENGTH(payment_id) desc, payment_id desc").Find(&lastPayment)
+				pid := lastPayment.PaymentID
+				num, _ := strconv.Atoi(s.Trim(pid, "PID"))
+				num++
+				payment.PaymentID = "PID" + strconv.Itoa(num)
+			}
+			db.Save(&payment)
+			post.Code = 200
+			post.Message = "Payment created/updated successfully."
+			c.JSON(http.StatusOK, post)
 		}
-		db.Save(&payment)
-		post.Code = 200
-		post.Message = "Payment created/updated successfully."
-		c.JSON(http.StatusOK, post)
+	} else {
+		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
 	}
 }

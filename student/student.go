@@ -25,11 +25,16 @@ func GetStudentGrades(c *gin.Context) {
 	defer db.Close()
 	id := c.Params.ByName("sid")
 	var grades []m.Grade
-	db.Where("student_id = ?", id).Find(&grades)
-	if len(grades) > 0 {
-		c.JSON(http.StatusOK, grades)
+
+	if m.IsAuthorizedUserType(c, db, 1){
+		db.Where("student_id = ?", id).Find(&grades)
+		if len(grades) > 0 {
+			c.JSON(http.StatusOK, grades)
+		} else {
+			c.JSON(http.StatusOK, make([]string, 0))
+		}
 	} else {
-		c.JSON(http.StatusOK, make([]string, 0))
+		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
 	}
 }
 
@@ -45,11 +50,16 @@ func GetStudentInfo(c *gin.Context) {
 	defer db.Close()
 	var student m.Student
 	id := c.Params.ByName("sid")
-	db.Where("username = ?", id).First(&student)
-	if student.Username == "" || student.FirstName == "" {
-		c.JSON(http.StatusOK, nil)
+
+	if m.IsAuthorizedUserType(c, db, 1){
+		db.Where("username = ?", id).First(&student)
+		if student.Username == "" || student.FirstName == "" {
+			c.JSON(http.StatusOK, nil)
+		} else {
+			c.JSON(http.StatusOK, student)
+		}
 	} else {
-		c.JSON(http.StatusOK, student)
+		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
 	}
 }
 
@@ -67,16 +77,21 @@ func GetStudentSubjects(c *gin.Context) {
 	var tcWithLink []m.TeachClassWithLink
 	var temptc m.TeachClassWithLink
 	id := c.Params.ByName("sid")
-	db.Table("teach_classes tc, students s").Where("s.username = ? and tc.class_id = s.class_id", id).Find(&teachClasses)
-	if len(teachClasses) > 0 {
-		for i := 0; i < len(teachClasses); i++ {
-			temptc.TeachClass = teachClasses[i]
-			temptc.Link = "http://localhost:8080/api/v1/teacher/" + teachClasses[i].TeacherID + "/classes?class=" + teachClasses[i].ClassID
-			tcWithLink = append(tcWithLink, temptc)
+
+	if m.IsAuthorizedUserType(c, db, 1){
+		db.Table("teach_classes tc, students s").Where("s.username = ? and tc.class_id = s.class_id", id).Find(&teachClasses)
+		if len(teachClasses) > 0 {
+			for i := 0; i < len(teachClasses); i++ {
+				temptc.TeachClass = teachClasses[i]
+				temptc.Link = "http://localhost:8080/api/v1/teacher/" + teachClasses[i].TeacherID + "/classes?class=" + teachClasses[i].ClassID
+				tcWithLink = append(tcWithLink, temptc)
+			}
+			c.JSON(http.StatusOK, tcWithLink)
+		} else {
+			c.JSON(http.StatusOK, make([]string, 0))
 		}
-		c.JSON(http.StatusOK, tcWithLink)
 	} else {
-		c.JSON(http.StatusOK, make([]string, 0))
+		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
 	}
 }
 
@@ -92,18 +107,23 @@ func GetStudentParents(c *gin.Context) {
 	defer db.Close()
 	var parents []m.ParentOf
 	id := c.Params.ByName("sid")
-	db.Where("student_id = ?", id).Find(&parents)
-	var parentsWithLink []m.ParentWithLink
-	var temp m.ParentWithLink
-	if len(parents) > 0 {
-		for i := 0; i < len(parents); i++ {
-			temp.ParentOf = parents[i]
-			temp.Link = "http://localhost:8080/api/v1/parent/" + parents[i].ParentID + "/info"
-			parentsWithLink = append(parentsWithLink, temp)
+
+	if m.IsAuthorizedUserType(c, db, 1){
+		db.Where("student_id = ?", id).Find(&parents)
+		var parentsWithLink []m.ParentWithLink
+		var temp m.ParentWithLink
+		if len(parents) > 0 {
+			for i := 0; i < len(parents); i++ {
+				temp.ParentOf = parents[i]
+				temp.Link = "http://localhost:8080/api/v1/parent/" + parents[i].ParentID + "/info"
+				parentsWithLink = append(parentsWithLink, temp)
+			}
+			c.JSON(http.StatusOK, parentsWithLink)
+		} else {
+			c.JSON(http.StatusOK, nil)
 		}
-		c.JSON(http.StatusOK, parentsWithLink)
 	} else {
-		c.JSON(http.StatusOK, nil)
+		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
 	}
 }
 
@@ -120,6 +140,7 @@ func PostStudentInfo(c *gin.Context) {
 	var student m.Student
 	var post m.PostResponse
 	c.Bind(&student)
+	//TODO authorization
 	if student.FirstName == "" || student.LastName == "" || student.ClassID == "" {
 		post.Code = 400
 		post.Message = "Missing Parameters"
