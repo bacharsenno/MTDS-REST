@@ -50,8 +50,9 @@ func GetStudentInfo(c *gin.Context) {
 	defer db.Close()
 	var student m.Student
 	id := c.Params.ByName("sid")
+	pid := c.Params.ByName("pid")
 
-	if m.IsAuthorizedUserType(c, db, 1){
+	if m.IsAuthorizedUserType(c, db, 1) || m.IsAuthorized(c, db, pid) {
 		db.Where("username = ?", id).First(&student)
 		if student.Username == "" || student.FirstName == "" {
 			c.JSON(http.StatusOK, nil)
@@ -140,24 +141,29 @@ func PostStudentInfo(c *gin.Context) {
 	var student m.Student
 	var post m.PostResponse
 	c.Bind(&student)
-	//TODO authorization
-	if student.FirstName == "" || student.LastName == "" || student.ClassID == "" {
-		post.Code = 400
-		post.Message = "Missing Parameters"
-		c.JSON(http.StatusBadRequest, post)
-	} else {
-		if student.Username == "" {
-			var lastStudent m.Student
-			db.Limit(1).Order("LENGTH(username) desc, username desc").Find(&lastStudent)
-			id := lastStudent.Username
-			id = s.Trim(id, "S")
-			num, _ := strconv.Atoi(id)
-			num++
-			student.Username = "S" + strconv.Itoa(num)
+	pid := c.Params.ByName("pid")
+	
+	if m.IsAuthorized(c, db, pid) {
+		if student.FirstName == "" || student.LastName == "" || student.ClassID == "" {
+			post.Code = 400
+			post.Message = "Missing Parameters"
+			c.JSON(http.StatusBadRequest, post)
+		} else {
+			if student.Username == "" {
+				var lastStudent m.Student
+				db.Limit(1).Order("LENGTH(username) desc, username desc").Find(&lastStudent)
+				id := lastStudent.Username
+				id = s.Trim(id, "S")
+				num, _ := strconv.Atoi(id)
+				num++
+				student.Username = "S" + strconv.Itoa(num)
+			}
+			db.Save(&student)
+			post.Code = 200
+			post.Message = "Student added/updated successfully."
+			c.JSON(http.StatusOK, post)
 		}
-		db.Save(&student)
-		post.Code = 200
-		post.Message = "Student added/updated successfully."
-		c.JSON(http.StatusOK, post)
+	} else {
+		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
 	}
 }

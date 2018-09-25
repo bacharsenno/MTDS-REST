@@ -127,8 +127,9 @@ func SetupRoutes() {
 		parent.GET("/students/:sid/grades", p.GetParentStudentsGrades)
 		parent.GET("/payments", p.GetParentPayments)
 		parent.POST("/info", p.PostParentInfo)
+		parent.POST("/students/:sid", d.PostStudentInfo)
 		parent.POST("/appointment", p.PostParentAppointment)
-		parent.POST("/payments", p.PostParentPayment)
+		parent.POST("/payments", p.PostParentPayment)	
 	}
 
 	class := R.Group("api/v1/class")
