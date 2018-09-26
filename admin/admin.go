@@ -56,7 +56,7 @@ func PostAdminInfo(c *gin.Context) {
 //
 // Output: Post Response
 //
-// Example URL: http://localhost:8080/api/v1/admin/A1/notification
+// Example URL: http://localhost:8080/api/v1/admin/A1/notifications
 func PostAdminNotification(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -85,7 +85,7 @@ func PostAdminNotification(c *gin.Context) {
 //
 // Output: Post Response
 //
-// Example URL: http://localhost:8080/api/v1/admin/A1/student
+// Example URL: http://localhost:8080/api/v1/admin/A1/students
 func PostAdminStudent(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -123,7 +123,7 @@ func PostAdminStudent(c *gin.Context) {
 //
 // Output: Post Response
 //
-// Example URL: http://localhost:8080/api/v1/admin/A1/parent
+// Example URL: http://localhost:8080/api/v1/admin/A1/parents
 func PostAdminParent(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -167,7 +167,7 @@ func PostAdminParent(c *gin.Context) {
 //
 // Output: Post Response
 //
-// Example URL: http://localhost:8080/api/v1/admin/A1/teacher
+// Example URL: http://localhost:8080/api/v1/admin/A1/teachers
 func PostAdminTeacher(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -211,7 +211,7 @@ func PostAdminTeacher(c *gin.Context) {
 //
 // Output: Post Response
 //
-// Example URL: http://localhost:8080/api/v1/admin/A1/payment
+// Example URL: http://localhost:8080/api/v1/admin/A1/payments
 func PostAdminPayment(c *gin.Context) {
 	db := initDb()
 	defer db.Close()

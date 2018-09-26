@@ -312,7 +312,7 @@ func PostParentInfo(c *gin.Context) {
 //
 // Output: Post Response
 //
-// Example URL: http://localhost:8080/api/v1/parent/P1/appointment
+// Example URL: http://localhost:8080/api/v1/parent/P1/appointments
 func PostParentAppointment(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
