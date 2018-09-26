@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var initDb = m.InitDb
@@ -26,9 +27,9 @@ func GetTeacherInfo(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
 	id := c.Params.ByName("tid")
-	
+
 	var teacher m.Teacher
-	
+
 	if m.IsAuthorized(c, db, id) {
 		db.Where("username = ?", id).First(&teacher)
 		c.JSON(http.StatusOK, teacher)
@@ -52,7 +53,7 @@ func GetTeacherNotifications(c *gin.Context) {
 	var teachClasses []m.TeachClass
 	var classes []string
 
-	if m.IsAuthorized(c, db, username){
+	if m.IsAuthorized(c, db, username) {
 		db.Where("teacher_id = ?", username).Find(&teachClasses)
 		for i := 0; i < len(teachClasses); i++ {
 			classes = append(classes, teachClasses[i].ClassID)
@@ -87,7 +88,7 @@ func GetTeacherAppointments(c *gin.Context) {
 	}
 	var appointments []m.Appointment
 
-	if m.IsAuthorized(c, db, username){
+	if m.IsAuthorized(c, db, username) {
 		switch scope {
 		case "day":
 			date := m.GetDateString(0)
@@ -141,7 +142,7 @@ func GetTeacherAgenda(c *gin.Context) {
 	var classSchedules []m.ClassSchedule
 	var temptc m.TeachClassWithLink
 
-	if m.IsAuthorized(c, db, username){
+	if m.IsAuthorized(c, db, username) {
 		currentDay := time.Now().Weekday().String()
 		condition := ""
 		if class != "" {
@@ -181,7 +182,7 @@ func GetTeacherAgenda(c *gin.Context) {
 //
 // Input: Teacher ID, [Class ID]
 //
-// Output: []Classes
+// Output: []TeachClasses
 //
 // Example URL: http://localhost:8080/api/v1/teacher/T1/classes
 func GetTeacherClasses(c *gin.Context) {
@@ -193,7 +194,7 @@ func GetTeacherClasses(c *gin.Context) {
 	username := c.Params.ByName("tid")
 	class := c.Query("class")
 
-	if m.IsAuthorized(c, db, username){
+	if m.IsAuthorized(c, db, username) {
 		if class != "" {
 			db.Where("teacher_id = ? AND class_id = ?", username, class).Find(&classes)
 		} else {
@@ -230,7 +231,7 @@ func GetTeacherClassGrades(c *gin.Context) {
 	var swgtemp m.StudentWithGrade
 	var classStudents []m.Student
 
-	if m.IsAuthorized(c, db, id){
+	if m.IsAuthorized(c, db, id) {
 		db.Where("class_id = ?", class).Order("LENGTH(username), username").Find(&classStudents)
 		if len(classStudents) > 0 {
 			for i := 0; i < len(classStudents); i++ {
@@ -275,13 +276,12 @@ func PostTeacherClassGrades(c *gin.Context) {
 	defer db.Close()
 	id := c.Params.ByName("tid")
 	var gradesList m.GradesList
-	var post m.PostResponse
 	c.Bind(&gradesList)
 	grades := gradesList.Grades
 
 	isAuthorized := true
 	for i := 0; i < len(grades); i++ {
-		if !m.IsAuthorized(c, db, grades[i].TeacherID)  {
+		if !m.IsAuthorized(c, db, grades[i].TeacherID) {
 			isAuthorized = false
 		}
 	}
@@ -289,9 +289,7 @@ func PostTeacherClassGrades(c *gin.Context) {
 		for i := 0; i < len(grades); i++ {
 			db.Save(&grades[i])
 		}
-		post.Code = 200
-		post.Message = "Grades created/updated successfully."
-		c.JSON(http.StatusOK, post) 
+		c.JSON(http.StatusOK, gradesList)
 	} else {
 		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
 	}
@@ -304,7 +302,7 @@ func PostTeacherClassGrades(c *gin.Context) {
 //
 // Output: Post Response
 //
-// Example URL: http://localhost:8080/api/v1/teacher/info
+// Example URL: http://localhost:8080/api/v1/teacher/T1/info
 func PostTeacherInfo(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -323,17 +321,16 @@ func PostTeacherInfo(c *gin.Context) {
 				num, _ := strconv.Atoi(id)
 				num++
 				teacher.Username = "T" + strconv.Itoa(num)
+				password, _ := bcrypt.GenerateFromPassword([]byte("TP"+strconv.Itoa(num)), bcrypt.DefaultCost)
 				user := m.User{
 					Username: teacher.Username,
-					Password: "TP" + strconv.Itoa(num),
+					Password: string(password),
 					Type:     1,
 				}
 				db.Save(&user)
 			}
 			db.Save(&teacher)
-			post.Code = 200
-			post.Message = "Teacher created/updated successfully."
-			c.JSON(http.StatusOK, post)
+			c.JSON(http.StatusOK, teacher)
 		} else {
 			post.Code = 400
 			post.Message = "Missing Parameters"
@@ -350,13 +347,12 @@ func PostTeacherInfo(c *gin.Context) {
 //
 // Output: Post Response
 //
-// Example URL: http://localhost:8080/api/v1/teacher/appointments
+// Example URL: http://localhost:8080/api/v1/teacher/T1/appointments
 func PostAppointmentInfo(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
 	id := c.Params.ByName("tid")
 	var appointment m.Appointment
-	var post m.PostResponse
 	c.Bind(&appointment)
 
 	if m.IsAuthorized(c, db, id) && m.IsAuthorized(c, db, appointment.TeacherID) {
@@ -366,9 +362,7 @@ func PostAppointmentInfo(c *gin.Context) {
 			appointment.AppointmentID = lastAppointment.AppointmentID + 1
 		}
 		db.Save(&appointment)
-		post.Code = 200
-		post.Message = "Appointment created/updated successfully."
-		c.JSON(http.StatusOK, post)
+		c.JSON(http.StatusOK, appointment)
 	} else {
 		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
 	}
@@ -376,11 +370,11 @@ func PostAppointmentInfo(c *gin.Context) {
 
 // PostTeacherAppointment creates a new appointment between a teacher and a parent in the database.
 //
-// Input: Appointment
+// Input: AppointmentRequest
 //
 // Output: Post Response
 //
-// Example URL: http://localhost:8080/api/v1/teacher/appointment
+// Example URL: http://localhost:8080/api/v1/teacher/T1/appointment
 func PostTeacherAppointment(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -405,6 +399,7 @@ func PostTeacherAppointment(c *gin.Context) {
 					StatusParent:  0,
 				}
 				db.Save(&app)
+				c.JSON(http.StatusOK, app)
 			}
 		} else {
 			app := m.Appointment{
@@ -419,10 +414,9 @@ func PostTeacherAppointment(c *gin.Context) {
 				StatusParent:  0,
 			}
 			db.Save(&app)
+			c.JSON(http.StatusOK, app)
 		}
-		c.String(http.StatusOK, "Appointment created/updated successfully.")
 	} else {
 		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
 	}
 }
-

@@ -16,14 +16,14 @@ var initDb = m.InitDb
 //
 // Output: []Classes
 //
-// Example URL: http://localhost:8080/api/v1/classes
+// Example URL: http://localhost:8080/api/v1/class/C1
 func GetClasses(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
 	var classes []m.Class
 	class := c.Params.ByName("cid")
 
-	if m.IsAuthorizedUserType(c, db, 1){
+	if m.IsAuthorizedUserType(c, db, 1) {
 		if class != "" {
 			db.Table("teach_classes").Select("class_id, location, year").Group("class_id").Where("class_id = ?", class).Order("LENGTH(class_id), class_id").Scan(&classes)
 		} else {
@@ -52,7 +52,7 @@ func GetClassStudents(c *gin.Context) {
 	class := c.Params.ByName("cid")
 	var students []m.Student
 
-	if m.IsAuthorizedUserType(c, db, 1){
+	if m.IsAuthorizedUserType(c, db, 1) {
 		db.Where("class_id = ?", class).Find(&students)
 		if len(students) > 0 {
 			var objectsWithLink []m.StudentWithLink

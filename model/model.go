@@ -4,8 +4,8 @@ package model
 import (
 	"time"
 
-	"github.com/jinzhu/gorm"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 )
 
 // User is the struct containing the login data and type of users.
@@ -360,10 +360,10 @@ func GetDateString(offset int) string {
 
 var UNAUTHORIZED_RESPONSE = PostResponse{Code: 401, Message: "You are not authorized to access this resource."}
 
-// isAuthorized check if the logged user is authorized to access the required resource
+// isAuthorized checks if the logged user is authorized to access the required resource
 func IsAuthorized(c *gin.Context, db *gorm.DB, paramId string) bool {
-	requestKey := c.GetHeader("X-Auth-Key");
-	
+	requestKey := c.GetHeader("X-Auth-Key")
+
 	var user User
 	db.Where("username = ?", requestKey).First(&user)
 
@@ -377,8 +377,8 @@ func IsAuthorized(c *gin.Context, db *gorm.DB, paramId string) bool {
 
 // isAuthorized check if the logged user is authorized to access the required resource according to its type
 func IsAuthorizedUserType(c *gin.Context, db *gorm.DB, userType int) bool {
-	requestKey := c.GetHeader("X-Auth-Key");
-	
+	requestKey := c.GetHeader("X-Auth-Key")
+
 	var user User
 	db.Where("username = ?", requestKey).First(&user)
 

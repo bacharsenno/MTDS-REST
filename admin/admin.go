@@ -19,7 +19,7 @@ var initDb = m.InitDb
 //
 // Output: Post Response
 //
-// Example URL: http://localhost:8080/api/v1/admin
+// Example URL: http://localhost:8080/api/v1/admin/A1/info
 func PostAdminInfo(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -27,12 +27,19 @@ func PostAdminInfo(c *gin.Context) {
 	var post m.PostResponse
 	c.Bind(&user)
 
-	if m.IsAuthorizedUserType(c, db, 0){
+	if m.IsAuthorizedUserType(c, db, 0) {
 		if user.Type == 0 {
+			if user.Username == "" {
+				var lastAdmin m.User
+				db.Limit(1).Order("LENGTH(username) desc, username desc").Find(&lastAdmin)
+				id := lastAdmin.Username
+				id = s.Trim(id, "A")
+				num, _ := strconv.Atoi(id)
+				num++
+				user.Username = "A" + strconv.Itoa(num)
+			}
 			db.Save(&user)
-			post.Code = 200
-			post.Message = "Admin Created/Updated Successfully"
-			c.JSON(http.StatusOK, post)
+			c.JSON(http.StatusOK, user)
 		} else {
 			post.Code = 400
 			post.Message = "Type should be 0"
@@ -49,45 +56,45 @@ func PostAdminInfo(c *gin.Context) {
 //
 // Output: Post Response
 //
-// Example URL: http://localhost:8080/api/v1/admin/notification
+// Example URL: http://localhost:8080/api/v1/admin/A1/notification
 func PostAdminNotification(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
 	var notification m.Notification
 	var post m.PostResponse
 	c.Bind(&notification)
+	aid := c.Params.ByName("aid")
 
-	if m.IsAuthorizedUserType(c, db, 0){
+	if m.IsAuthorized(c, db, aid) {
 		if notification.StartDate.Before(time.Now()) || notification.EndDate.Before(time.Now()) {
 			post.Code = 400
 			post.Message = "StartDate/EndDate shouldn't be in the past"
 			c.JSON(http.StatusBadRequest, post)
 		} else {
 			db.Save(&notification)
-			post.Code = 200
-			post.Message = "Notification Added Successfully."
-			c.JSON(http.StatusOK, post)
+			c.JSON(http.StatusOK, notification)
 		}
 	} else {
 		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
 	}
 }
 
-// PostAdminStudent creates/updates a notification.
+// PostAdminStudent creates/updates a student.
 //
-// Input: Notification Object
+// Input: Student Object
 //
 // Output: Post Response
 //
-// Example URL: http://localhost:8080/api/v1/admin/student
+// Example URL: http://localhost:8080/api/v1/admin/A1/student
 func PostAdminStudent(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
 	var student m.Student
 	var post m.PostResponse
 	c.Bind(&student)
+	aid := c.Params.ByName("aid")
 
-	if m.IsAuthorizedUserType(c, db, 0){
+	if m.IsAuthorized(c, db, aid) {
 		if student.FirstName == "" || student.LastName == "" || student.ClassID == "" {
 			post.Code = 400
 			post.Message = "Missing Parameters"
@@ -103,30 +110,29 @@ func PostAdminStudent(c *gin.Context) {
 				student.Username = "S" + strconv.Itoa(num)
 			}
 			db.Save(&student)
-			post.Code = 200
-			post.Message = "Student added/updated successfully."
-			c.JSON(http.StatusOK, post)
+			c.JSON(http.StatusOK, student)
 		}
 	} else {
 		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
 	}
 }
 
-// PostAdminParent creates/updates a notification.
+// PostAdminParent creates/updates a parent.
 //
 // Input: Parent Object
 //
 // Output: Post Response
 //
-// Example URL: http://localhost:8080/api/v1/admin/parent
+// Example URL: http://localhost:8080/api/v1/admin/A1/parent
 func PostAdminParent(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
 	var parent m.Parent
 	var post m.PostResponse
 	c.Bind(&parent)
+	aid := c.Params.ByName("aid")
 
-	if m.IsAuthorizedUserType(c, db, 0){
+	if m.IsAuthorized(c, db, aid) {
 		if parent.FirstName != "" && parent.LastName != "" && parent.Email != "" {
 			if parent.Username == "" {
 				var lastParent m.Parent
@@ -144,9 +150,7 @@ func PostAdminParent(c *gin.Context) {
 				db.Save(&user)
 			}
 			db.Save(&parent)
-			post.Code = 200
-			post.Message = "Parent created/updated successfully."
-			c.JSON(http.StatusOK, post)
+			c.JSON(http.StatusOK, parent)
 		} else {
 			post.Code = 400
 			post.Message = "Missing Parameters"
@@ -157,21 +161,22 @@ func PostAdminParent(c *gin.Context) {
 	}
 }
 
-// PostAdminTeacher creates/updates a notification.
+// PostAdminTeacher creates/updates a teacher.
 //
-// Input: Notification Object
+// Input: Teacher Object
 //
 // Output: Post Response
 //
-// Example URL: http://localhost:8080/api/v1/admin/teacher
+// Example URL: http://localhost:8080/api/v1/admin/A1/teacher
 func PostAdminTeacher(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
 	var teacher m.Teacher
 	var post m.PostResponse
 	c.Bind(&teacher)
+	aid := c.Params.ByName("aid")
 
-	if m.IsAuthorizedUserType(c, db, 0){
+	if m.IsAuthorized(c, db, aid) {
 		if teacher.FirstName != "" && teacher.LastName != "" && teacher.ProfilePic != "" {
 			if teacher.Username == "" {
 				var lastTeacher m.Teacher
@@ -189,9 +194,7 @@ func PostAdminTeacher(c *gin.Context) {
 				db.Save(&user)
 			}
 			db.Save(&teacher)
-			post.Code = 200
-			post.Message = "Teacher created/updated successfully."
-			c.JSON(http.StatusOK, post)
+			c.JSON(http.StatusOK, teacher)
 		} else {
 			post.Code = 400
 			post.Message = "Missing Parameters"
@@ -208,15 +211,16 @@ func PostAdminTeacher(c *gin.Context) {
 //
 // Output: Post Response
 //
-// Example URL: http://localhost:8080/api/v1/admin/teacher
+// Example URL: http://localhost:8080/api/v1/admin/A1/payment
 func PostAdminPayment(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
 	var payment m.Payment
 	var post m.PostResponse
 	c.Bind(&payment)
+	aid := c.Params.ByName("aid")
 
-	if m.IsAuthorizedUserType(c, db, 0){
+	if m.IsAuthorized(c, db, aid) {
 		if payment.StudentID == "" {
 			post.Code = 400
 			post.Message = "Missing Parameters"
@@ -231,9 +235,7 @@ func PostAdminPayment(c *gin.Context) {
 				payment.PaymentID = "PID" + strconv.Itoa(num)
 			}
 			db.Save(&payment)
-			post.Code = 200
-			post.Message = "Payment created/updated successfully."
-			c.JSON(http.StatusOK, post)
+			c.JSON(http.StatusOK, payment)
 		}
 	} else {
 		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)

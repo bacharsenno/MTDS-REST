@@ -27,13 +27,13 @@ func GetParentInfo(c *gin.Context) {
 	username := c.Params.ByName("pid")
 	var parent m.Parent
 
-	if m.IsAuthorized(c, db, username){
+	if m.IsAuthorized(c, db, username) {
 		db.Where("username = ?", username).Find(&parent)
-		c.JSON(http.StatusOK, parent)	
+		c.JSON(http.StatusOK, parent)
 	} else {
 		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
 	}
-	
+
 }
 
 // GetParentNotifications returns the notification that have this specific parent, "PARENTS", or "ALL" as destination.
@@ -42,7 +42,7 @@ func GetParentInfo(c *gin.Context) {
 //
 // Output: []Notification
 //
-// Example URL: http://localhost:8080/api/v1/parent/P1/notifications?
+// Example URL: http://localhost:8080/api/v1/parent/P1/notifications
 func GetParentNotifications(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -50,7 +50,7 @@ func GetParentNotifications(c *gin.Context) {
 	var notifications []m.Notification
 	var students []m.Student
 
-	if m.IsAuthorized(c, db, username){
+	if m.IsAuthorized(c, db, username) {
 		db.Table("parent_ofs po, students s").Select("s.*").Where("po.parent_id = ? and po.student_id = s.username", username).Find(&students)
 		var classes []string
 		for i := 0; i < len(students); i++ {
@@ -84,8 +84,8 @@ func GetParentAppointments(c *gin.Context) {
 		scope = "all"
 	}
 	var appointments []m.Appointment
-	
-	if m.IsAuthorized(c, db, username){
+
+	if m.IsAuthorized(c, db, username) {
 		switch scope {
 		case "day":
 			date := m.GetDateString(0)
@@ -127,7 +127,7 @@ func GetParentStudents(c *gin.Context) {
 	username := c.Params.ByName("pid")
 	var students []m.Student
 
-	if m.IsAuthorized(c, db, username){
+	if m.IsAuthorized(c, db, username) {
 		db.Table("students s, parent_ofs po").Where("po.parent_id = ? and po.student_id = s.username", username).Find(&students)
 		if len(students) > 0 {
 			var objectsWithLink []m.StudentWithLink
@@ -165,7 +165,7 @@ func GetParentStudentsGrades(c *gin.Context) {
 	semester := c.Query("semester")
 	sid := c.Params.ByName("sid")
 
-	if m.IsAuthorized(c, db, id){
+	if m.IsAuthorized(c, db, id) {
 		if sid == "" {
 			db.Table("students s, parent_ofs po").Where("po.parent_id = ? and po.student_id = s.username", id).Find(&students)
 		} else {
@@ -239,7 +239,7 @@ func GetParentPayments(c *gin.Context) {
 		status = ""
 	}
 
-	if m.IsAuthorized(c, db, username){
+	if m.IsAuthorized(c, db, username) {
 		if status != "" {
 			db.Where("parent_id = ? and status = ?", username, status).Find(&payments)
 		} else {
@@ -268,7 +268,7 @@ func GetParentPayments(c *gin.Context) {
 //
 // Output: Post Response.
 //
-// Example URL: http://localhost:8080/api/v1/parent/info
+// Example URL: http://localhost:8080/api/v1/parent/P1/info
 func PostParentInfo(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -295,9 +295,7 @@ func PostParentInfo(c *gin.Context) {
 				db.Save(&user)
 			}
 			db.Save(&parent)
-			post.Code = 200
-			post.Message = "Parent created/updated successfully."
-			c.JSON(http.StatusOK, post)
+			c.JSON(http.StatusOK, parent)
 		} else {
 			post.Code = 400
 			post.Message = "Missing Parameters"
@@ -314,7 +312,7 @@ func PostParentInfo(c *gin.Context) {
 //
 // Output: Post Response
 //
-// Example URL: http://localhost:8080/api/v1/parent/appointment
+// Example URL: http://localhost:8080/api/v1/parent/P1/appointment
 func PostParentAppointment(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -344,7 +342,7 @@ func PostParentAppointment(c *gin.Context) {
 //
 // Output: Post Response
 //
-// Example URL: http://localhost:8080/api/v1/parent/payments
+// Example URL: http://localhost:8080/api/v1/parent/P1/payments
 func PostParentPayment(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -360,21 +358,13 @@ func PostParentPayment(c *gin.Context) {
 			post.Code = 406
 			post.Message = "Invalid CreditCard Number"
 			c.JSON(http.StatusNotAcceptable, post)
+		} else if payment.PaymentID == "" {
+			post.Code = 406
+			post.Message = "PaymentID Not Supplied"
+			c.JSON(http.StatusBadRequest, post)
 		} else {
-			if payment.PaymentID == "" || payment.ParentID == "" {
-				var lastPayment m.Payment
-				db.Limit(1).Order("LENGTH(payment_id) desc, payment_id desc").Find(&lastPayment)
-				pid := lastPayment.PaymentID
-				num, _ := strconv.Atoi(s.Trim(pid, "PID"))
-				num++
-				payment.PaymentID = "PID" + strconv.Itoa(num)
-			} else {
-				payment.Status = "2"
-			}
 			db.Save(&payment)
-			post.Code = 200
-			post.Message = "Payment updated successfully."
-			c.JSON(http.StatusOK, post)
+			c.JSON(http.StatusOK, payment)
 		}
 	} else {
 		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)

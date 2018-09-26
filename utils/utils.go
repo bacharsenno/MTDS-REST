@@ -21,7 +21,7 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
-	/*csrf "github.com/utrack/gin-csrf"*/
+	csrf "github.com/utrack/gin-csrf"
 	// Imported for authentication purposes
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/pjebs/restgate"
@@ -89,7 +89,7 @@ func SetupRoutes() {
 	store := cookie.NewStore([]byte("secret"))
 	R.Use(sessions.Sessions("cookie", store))
 	R.Use(gin.Recovery())
-	/*R.Use(csrf.Middleware(csrf.Options{
+	R.Use(csrf.Middleware(csrf.Options{
 		Secret: "secret123",
 		ErrorFunc: func(c *gin.Context) {
 			c.String(400, "CSRF token mismatch")
@@ -98,7 +98,7 @@ func SetupRoutes() {
 	}))
 	R.GET("/protected", func(c *gin.Context) {
 		c.String(200, csrf.GetToken(c))
-	})*/
+	})
 
 	R.POST("api/v1/login", PostLogin)
 
@@ -129,7 +129,7 @@ func SetupRoutes() {
 		parent.POST("/info", p.PostParentInfo)
 		parent.POST("/students/:sid", d.PostStudentInfo)
 		parent.POST("/appointment", p.PostParentAppointment)
-		parent.POST("/payments", p.PostParentPayment)	
+		parent.POST("/payments", p.PostParentPayment)
 	}
 
 	class := R.Group("api/v1/class")
@@ -147,9 +147,9 @@ func SetupRoutes() {
 		student.POST("/info", d.PostStudentInfo)
 	}
 
-	admin := R.Group("api/v1/admin")
+	admin := R.Group("api/v1/admin/:aid")
 	{
-		admin.POST("/", a.PostAdminInfo)
+		admin.POST("/info", a.PostAdminInfo)
 		admin.POST("/notification", a.PostAdminNotification)
 		admin.POST("/parent", a.PostAdminParent)
 		admin.POST("/payment", a.PostAdminPayment)
@@ -543,4 +543,3 @@ func PostLogin(c *gin.Context) {
 func truncate(x float64, n int) float64 {
 	return math.Floor(x*math.Pow(10, float64(n))) * math.Pow(10, -float64(n))
 }
-
