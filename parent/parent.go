@@ -358,21 +358,27 @@ func PostParentPayment(c *gin.Context) {
 	payment := paymentInfo.Payment
 	creditCard := paymentInfo.CreditCard
 	var post m.PostResponse
-
-	if m.IsAuthorized(c, db, username) && m.IsAuthorized(c, db, payment.ParentID) {
-		if len(creditCard.CCN) != 16 {
-			post.Code = 406
-			post.Message = "Invalid CreditCard Number"
-			c.JSON(http.StatusNotAcceptable, post)
-		} else if payment.PaymentID == "" {
-			post.Code = 406
-			post.Message = "PaymentID Not Supplied"
-			c.JSON(http.StatusBadRequest, post)
-		} else {
-			db.Save(&payment)
-			c.JSON(http.StatusOK, payment)
-		}
+	empty := "0001-01-01 00:00:00 +0000 UTC"
+	if payment.Deadline.String() == empty || payment.CreatedAt.String() == empty || payment.Amount == 0 {
+		post.Code = 403
+		post.Message = "Missing Data"
+		c.JSON(http.StatusBadRequest, post)
 	} else {
-		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
+		if m.IsAuthorized(c, db, username) && m.IsAuthorized(c, db, payment.ParentID) {
+			if len(creditCard.CCN) != 16 {
+				post.Code = 406
+				post.Message = "Invalid CreditCard Number"
+				c.JSON(http.StatusNotAcceptable, post)
+			} else if payment.PaymentID == "" {
+				post.Code = 406
+				post.Message = "PaymentID Not Supplied"
+				c.JSON(http.StatusBadRequest, post)
+			} else {
+				db.Save(&payment)
+				c.JSON(http.StatusOK, payment)
+			}
+		} else {
+			c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
+		}
 	}
 }
