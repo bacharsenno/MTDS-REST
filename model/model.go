@@ -232,17 +232,6 @@ type StudentParentGrades struct {
 	SubjectGrades []StudentGradesBySubject `form:"SubjectGrades" json:"SubjectGrades"`
 }
 
-// AppointmentRequest is a custom struct created for JSON construction purposes.
-type AppointmentRequest struct {
-	StudentID string    `form:"StudentID" json:"StudentID"`
-	TeacherID string    `form:"TeacherID" json:"TeacherID"`
-	ParentID  string    `form:"ParentID" json:"ParentID"`
-	FullDay   bool      `form:"FullDay" json:"FullDay"`
-	StartTime time.Time `form:"StartTime" json:"StartTime"`
-	EndTime   time.Time `form:"EndTime" json:"EndTime"`
-	Remarks   string    `form:"Remarks" json:"Remarks"`
-}
-
 // PaymentInfo is a custom struct created for JSON construction purposes.
 type PaymentInfo struct {
 	CreditCard `form:"CreditCard" json:"CreditCard"`

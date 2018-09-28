@@ -16,7 +16,7 @@ var initDb = m.InitDb
 //
 // Output: []Classes
 //
-// Example URL: http://localhost:8080/api/v1/class/C1
+// Example URL: http://localhost:8080/api/v1/classes/C1
 func GetClasses(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -45,7 +45,7 @@ func GetClasses(c *gin.Context) {
 //
 // Output: []Student.
 //
-// Example URL: http://localhost:8080/api/v1/class/C1/students
+// Example URL: http://localhost:8080/api/v1/classes/C1/students
 func GetClassStudents(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
