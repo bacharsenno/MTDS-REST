@@ -232,11 +232,6 @@ type StudentParentGrades struct {
 	SubjectGrades []StudentGradesBySubject `form:"SubjectGrades" json:"SubjectGrades"`
 }
 
-// GradesList is a custom struct created for JSON construction purposes.
-type GradesList struct {
-	Grades []Grade `form:"Grades" json:"Grades"`
-}
-
 // AppointmentRequest is a custom struct created for JSON construction purposes.
 type AppointmentRequest struct {
 	StudentID string    `form:"StudentID" json:"StudentID"`

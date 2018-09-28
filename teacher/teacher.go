@@ -221,12 +221,12 @@ func GetTeacherClasses(c *gin.Context) {
 //
 // Output: []StudentWithGrades
 //
-// Example URL: http://localhost:8080/api/v1/teacher/T1/grades?class=C3&semester=2
+// Example URL: http://localhost:8080/api/v1/teacher/T1/classes/C1/grades?semester=2
 func GetTeacherClassGrades(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
 	id := c.Params.ByName("tid")
-	class := c.Query("class")
+	class := c.Params.ByName("cid")
 	var studentsWithGrades []m.StudentWithGrade
 	var swgtemp m.StudentWithGrade
 	var classStudents []m.Student
@@ -275,21 +275,21 @@ func PostTeacherClassGrades(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
 	id := c.Params.ByName("tid")
-	var gradesList m.GradesList
-	c.Bind(&gradesList)
-	grades := gradesList.Grades
+	var grades []m.Grade
+	c.Bind(&grades)
 
 	isAuthorized := true
 	for i := 0; i < len(grades); i++ {
 		if !m.IsAuthorized(c, db, grades[i].TeacherID) {
 			isAuthorized = false
+			break
 		}
 	}
 	if m.IsAuthorized(c, db, id) && isAuthorized {
 		for i := 0; i < len(grades); i++ {
 			db.Save(&grades[i])
 		}
-		c.JSON(http.StatusOK, gradesList)
+		c.JSON(http.StatusOK, grades)
 	} else {
 		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
 	}

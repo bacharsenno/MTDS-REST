@@ -109,7 +109,7 @@ func SetupRoutes() {
 		teacher.GET("/appointments", t.GetTeacherAppointments)
 		teacher.GET("/agenda", t.GetTeacherAgenda)
 		teacher.GET("/classes", t.GetTeacherClasses)
-		teacher.GET("/grades", t.GetTeacherClassGrades)
+		teacher.GET("/classes/:cid/grades", t.GetTeacherClassGrades)
 		teacher.POST("/grades", t.PostTeacherClassGrades)
 		teacher.POST("/info", t.PostTeacherInfo)
 		teacher.POST("/appointments", t.PostAppointmentInfo)
