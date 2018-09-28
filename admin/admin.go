@@ -13,6 +13,25 @@ import (
 
 var initDb = m.InitDb
 
+// GetAdminList returns a list of all admins.
+//
+// Input: None.
+//
+// Output: []Users
+//
+// Example URL: http://localhost:8080/api/v1/admin/list
+func GetAdminList(c *gin.Context) {
+	db := initDb()
+	defer db.Close()
+	var admins []m.User
+	if m.IsAuthorizedUserType(c, db, 0) {
+		db.Where("type = 0").Find(&admins)
+		c.JSON(http.StatusOK, admins)
+	} else {
+		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
+	}
+}
+
 // PostAdminInfo creates/updates an administrator account.
 //
 // Input: User Object (Type = 0)

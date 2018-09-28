@@ -55,10 +55,10 @@ func GetStudentInfo(c *gin.Context) {
 	var parent m.ParentOf
 	db.Where("student_id = ?", id).First(&parent)
 
-	if m.IsAuthorizedUserType(c, db, 0) || (m.IsAuthorized(c, db, pid) && parent.ParentID == pid ) {
+	if m.IsAuthorizedUserType(c, db, 0) || (m.IsAuthorized(c, db, pid) && parent.ParentID == pid) {
 		db.Where("username = ?", id).First(&student)
 		if student.Username == "" || student.FirstName == "" {
-			c.JSON(http.StatusOK, nil)
+			c.JSON(http.StatusOK, make([]string, 0))
 		} else {
 			c.JSON(http.StatusOK, student)
 		}

@@ -82,6 +82,8 @@ func Cors() gin.HandlerFunc {
 // SetupRoutes is a function that sets up the different API routes and specify the corresponding implementations.
 //
 // Paths are divided based on category (login, teacher, parent, student, class etc...)
+//
+// Header for CSRF: X-CSRF-TOKEN (obtained by sending GET request to /protected). Header for authentication: X-Auth-Key, X-Auth-Secret
 func SetupRoutes() {
 
 	R.Use(Cors())
@@ -148,6 +150,7 @@ func SetupRoutes() {
 
 	admin := R.Group("api/v1/admin/:aid")
 	{
+		admin.GET("/../list", a.GetAdminList)
 		admin.POST("/info", a.PostAdminInfo)
 		admin.POST("/notifications", a.PostAdminNotification)
 		admin.POST("/parents", a.PostAdminParent)
@@ -514,6 +517,7 @@ func PostLogin(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
 	var user m.User
+	var post m.PostResponse
 	c.Bind(&user)
 	session := sessions.Default(c)
 	var count int
@@ -534,7 +538,9 @@ func PostLogin(c *gin.Context) {
 		dbUser.Password = ""
 		c.JSON(http.StatusOK, dbUser)
 	} else {
-		c.String(http.StatusNotFound, "User Not Found")
+		post.Code = 409
+		post.Message = "Incorret Login"
+		c.JSON(http.StatusBadRequest, post)
 	}
 }
 

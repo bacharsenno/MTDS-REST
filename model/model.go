@@ -101,7 +101,7 @@ type GradeSummary struct {
 
 // Payment is the basic payment struct containing all related info.
 //
-// Status = 1 for pending payments, 2 for completed.
+// Status = 0 for inactive/deleted payments, 1 for pending payments, 2 for completed.
 type Payment struct {
 	PaymentID   string    `gorm:"PRIMARY_KEY" form:"PaymentID" json:"PaymentID"`
 	ParentID    string    `form:"ParentID" json:"ParentID"`

@@ -165,7 +165,10 @@ func GetParentStudentsGrades(c *gin.Context) {
 	semester := c.Query("semester")
 	sid := c.Params.ByName("sid")
 
-	if m.IsAuthorized(c, db, id) {
+	var parent m.ParentOf
+	db.Where("student_id = ?", sid).First(&parent)
+
+	if m.IsAuthorized(c, db, id) && parent.ParentID == id {
 		if sid == "" {
 			db.Table("students s, parent_ofs po").Where("po.parent_id = ? and po.student_id = s.username", id).Find(&students)
 		} else {
@@ -264,7 +267,7 @@ func GetParentPayments(c *gin.Context) {
 
 // PostParentInfo updates the information of a specified parent, or creates a new parent with the given information otherwise.
 //
-// Input: Parent Data (ID Optional)
+// Input: Parent Data (ID Optional, FirstName, LastName, Email mandatory)
 //
 // Output: Post Response.
 //
@@ -320,19 +323,22 @@ func PostParentAppointment(c *gin.Context) {
 	var appointment m.Appointment
 	var post m.PostResponse
 	c.Bind(&appointment)
-
-	if m.IsAuthorized(c, db, username) && m.IsAuthorized(c, db, appointment.ParentID) {
-		if appointment.AppointmentID == 0 {
-			var lastAppointment m.Appointment
-			db.Limit(1).Order("LENGTH(appointment_id) desc, appointment_id desc").Find(&lastAppointment)
-			appointment.AppointmentID = lastAppointment.AppointmentID + 1
-		}
-		db.Save(&appointment)
-		post.Code = 200
-		post.Message = "Appointment created/updated successfully."
-		c.JSON(http.StatusOK, post)
+	if appointment.ParentID == "" || appointment.TeacherID == "" {
+		post.Code = 400
+		post.Message = "Missing Data"
+		c.JSON(http.StatusBadRequest, post)
 	} else {
-		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
+		if m.IsAuthorized(c, db, username) && m.IsAuthorized(c, db, appointment.ParentID) {
+			if appointment.AppointmentID == 0 {
+				var lastAppointment m.Appointment
+				db.Limit(1).Order("LENGTH(appointment_id) desc, appointment_id desc").Find(&lastAppointment)
+				appointment.AppointmentID = lastAppointment.AppointmentID + 1
+			}
+			db.Save(&appointment)
+			c.JSON(http.StatusOK, appointment)
+		} else {
+			c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
+		}
 	}
 }
 
@@ -353,7 +359,7 @@ func PostParentPayment(c *gin.Context) {
 	creditCard := paymentInfo.CreditCard
 	var post m.PostResponse
 
-	if m.IsAuthorized(c, db, username) && m.IsAuthorized(c, db, paymentInfo.ParentID) {
+	if m.IsAuthorized(c, db, username) && m.IsAuthorized(c, db, payment.ParentID) {
 		if len(creditCard.CCN) != 16 {
 			post.Code = 406
 			post.Message = "Invalid CreditCard Number"

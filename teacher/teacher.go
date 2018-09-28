@@ -276,13 +276,21 @@ func PostTeacherClassGrades(c *gin.Context) {
 	defer db.Close()
 	id := c.Params.ByName("tid")
 	var grades []m.Grade
+	var post m.PostResponse
 	c.Bind(&grades)
 
 	isAuthorized := true
 	for i := 0; i < len(grades); i++ {
 		if !m.IsAuthorized(c, db, grades[i].TeacherID) {
 			isAuthorized = false
-			break
+			c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
+			return
+		}
+		if grades[i].StudentID == "" {
+			post.Code = 400
+			post.Message = "Missing Parameters"
+			c.JSON(http.StatusBadRequest, post)
+			return
 		}
 	}
 	if m.IsAuthorized(c, db, id) && isAuthorized {
@@ -310,9 +318,8 @@ func PostTeacherInfo(c *gin.Context) {
 	var teacher m.Teacher
 	var post m.PostResponse
 	c.Bind(&teacher)
-
 	if m.IsAuthorized(c, db, id) && m.IsAuthorized(c, db, teacher.Username) {
-		if teacher.FirstName != "" && teacher.LastName != "" && teacher.ProfilePic != "" {
+		if teacher.FirstName != "" && teacher.LastName != "" && teacher.ProfilePic != "" && teacher.DateOfBirth.String() != "0001-01-01 00:00:00 +0000 UTC" {
 			if teacher.Username == "" {
 				var lastTeacher m.Teacher
 				db.Limit(1).Order("LENGTH(username) desc, username desc").Find(&lastTeacher)
