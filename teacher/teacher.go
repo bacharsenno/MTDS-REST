@@ -235,22 +235,20 @@ func GetTeacherClassGrades(c *gin.Context) {
 		db.Where("class_id = ?", class).Order("LENGTH(username), username").Find(&classStudents)
 		if len(classStudents) > 0 {
 			for i := 0; i < len(classStudents); i++ {
+				var parent m.ParentOf
+				db.Where("student_id = ?", classStudents[i].Username).First(&parent)
 				swgtemp.BasicStudent.StudentID = classStudents[i].Username
 				swgtemp.BasicStudent.FirstName = classStudents[i].FirstName
 				swgtemp.BasicStudent.LastName = classStudents[i].LastName
 				swgtemp.BasicStudent.ProfilePic = classStudents[i].ProfilePic
 				swgtemp.BasicStudent.Link = "http://localhost:8080/api/v1/student/" + classStudents[i].Username + "/info"
+				swgtemp.BasicStudent.Link += " ; http://localhost:8080/api/v1/parent/" + parent.ParentID + "/info"
 				semester := c.Query("semester")
 				if semester == "" {
 					db.Where("teacher_id = ? and student_id = ? and year = ?", id, classStudents[i].Username, time.Now().Year()).Find(&swgtemp.Grades)
 				} else {
 					sem, _ := strconv.Atoi(semester)
 					db.Where("teacher_id = ? and student_id = ? and year = ? and semester = ?", id, classStudents[i].Username, time.Now().Year(), sem).Find(&swgtemp.Grades)
-				}
-				for j := 0; j < len(swgtemp.Grades); j++ {
-					var parent m.ParentOf
-					db.Where("student_id = ?", classStudents[i].Username).First(&parent)
-					swgtemp.Grades[j].Link = "http://localhost:8080/api/v1/parent/" + parent.ParentID + "/info"
 				}
 				db.Where("teacher_id = ? and student_id = ? and year = ?", id, classStudents[i].Username, time.Now().Year()).Find(&swgtemp.GradeSummaries)
 				studentsWithGrades = append(studentsWithGrades, swgtemp)

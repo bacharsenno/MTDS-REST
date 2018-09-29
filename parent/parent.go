@@ -190,7 +190,6 @@ func GetParentStudentsGrades(c *gin.Context) {
 				sub := grades[0].Subject
 				temp2.Subject = sub
 				for j := 0; j < len(grades); j++ {
-					grades[j].Link = "http://localhost:8080/api/v1/teacher/" + grades[j].TeacherID + "/info"
 					if grades[j].Subject == sub {
 						temp2.Grades = append(temp2.Grades, grades[j])
 						if j == len(grades)-1 {

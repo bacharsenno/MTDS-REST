@@ -84,7 +84,6 @@ type Grade struct {
 	Date      time.Time `form:"Date" json:"Date"`
 	Grade     float64   `form:"Grade" json:"Grade"`
 	Remarks   string    `form:"Remarks" json:"Remarks"`
-	Link      string    `form:"Link" json:"Link"`
 }
 
 // GradeSummary is the struct containing all related info, representing the overall performance of a student in a specific course for a specific semester. Fields are self-explanatory.
