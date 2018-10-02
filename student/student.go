@@ -34,7 +34,7 @@ func GetStudentGrades(c *gin.Context) {
 			c.JSON(http.StatusOK, make([]string, 0))
 		}
 	} else {
-		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
+		c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
 	}
 }
 
@@ -63,7 +63,7 @@ func GetStudentInfo(c *gin.Context) {
 			c.JSON(http.StatusOK, student)
 		}
 	} else {
-		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
+		c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
 	}
 }
 
@@ -98,7 +98,7 @@ func GetStudentSubjects(c *gin.Context) {
 			c.JSON(http.StatusOK, make([]string, 0))
 		}
 	} else {
-		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
+		c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
 	}
 }
 
@@ -130,7 +130,7 @@ func GetStudentParents(c *gin.Context) {
 			c.JSON(http.StatusOK, nil)
 		}
 	} else {
-		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
+		c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
 	}
 }
 
@@ -171,6 +171,6 @@ func PostStudentInfo(c *gin.Context) {
 			c.JSON(http.StatusOK, student)
 		}
 	} else {
-		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
+		c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
 	}
 }

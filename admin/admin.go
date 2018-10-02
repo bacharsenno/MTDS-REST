@@ -28,7 +28,7 @@ func GetAdminList(c *gin.Context) {
 		db.Where("type = 0").Find(&admins)
 		c.JSON(http.StatusOK, admins)
 	} else {
-		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
+		c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
 	}
 }
 
@@ -65,7 +65,7 @@ func PostAdminInfo(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, post)
 		}
 	} else {
-		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
+		c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
 	}
 }
 
@@ -94,7 +94,7 @@ func PostAdminNotification(c *gin.Context) {
 			c.JSON(http.StatusOK, notification)
 		}
 	} else {
-		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
+		c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
 	}
 }
 
@@ -132,7 +132,7 @@ func PostAdminStudent(c *gin.Context) {
 			c.JSON(http.StatusOK, student)
 		}
 	} else {
-		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
+		c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
 	}
 }
 
@@ -176,7 +176,7 @@ func PostAdminParent(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, post)
 		}
 	} else {
-		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
+		c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
 	}
 }
 
@@ -220,7 +220,7 @@ func PostAdminTeacher(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, post)
 		}
 	} else {
-		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
+		c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
 	}
 }
 
@@ -257,6 +257,6 @@ func PostAdminPayment(c *gin.Context) {
 			c.JSON(http.StatusOK, payment)
 		}
 	} else {
-		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
+		c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
 	}
 }

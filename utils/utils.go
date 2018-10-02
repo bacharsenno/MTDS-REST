@@ -87,12 +87,12 @@ func Cors() gin.HandlerFunc {
 func SetupRoutes() {
 
 	R.Use(Cors())
-	R.Use(rgAdapter)
 	store := cookie.NewStore([]byte("secret"))
-	R.Use(sessions.Sessions("cookie", store))
+	R.Use(sessions.Sessions("mysession", store))
 	R.Use(gin.Recovery())
+	secret := genRandStr(10)
 	R.Use(csrf.Middleware(csrf.Options{
-		Secret: "secret123",
+		Secret: secret,
 		ErrorFunc: func(c *gin.Context) {
 			c.String(400, "CSRF token mismatch")
 			c.Abort()
@@ -104,61 +104,62 @@ func SetupRoutes() {
 
 	R.POST("api/v1/login", PostLogin)
 
-	teacher := R.Group("api/v1/teacher/:tid")
-	{
-		teacher.GET("/info", t.GetTeacherInfo)
-		teacher.GET("/notifications", t.GetTeacherNotifications)
-		teacher.GET("/appointments", t.GetTeacherAppointments)
-		teacher.GET("/agenda", t.GetTeacherAgenda)
-		teacher.GET("/classes", t.GetTeacherClasses)
-		teacher.GET("/classes/:cid/grades", t.GetTeacherClassGrades)
-		teacher.POST("/grades", t.PostTeacherClassGrades)
-		teacher.POST("/info", t.PostTeacherInfo)
-		teacher.POST("/appointments", t.PostAppointmentInfo)
-	}
+	R.POST("api/v1/logout", PostLogout)
 
-	parent := R.Group("api/v1/parent/:pid")
+	privateAPI := R.Group("")
 	{
-		parent.GET("/info", p.GetParentInfo)
-		parent.GET("/notifications", p.GetParentNotifications)
-		parent.GET("/appointments", p.GetParentAppointments)
-		parent.GET("/students", p.GetParentStudents)
-		parent.GET("/students/:sid", d.GetStudentInfo)
-		parent.GET("/students/:sid/subjects", d.GetStudentSubjects)
-		parent.GET("/students/:sid/grades", p.GetParentStudentsGrades)
-		parent.GET("/payments", p.GetParentPayments)
-		parent.POST("/info", p.PostParentInfo)
-		parent.POST("/students/:sid", d.PostStudentInfo)
-		parent.POST("/appointments", p.PostParentAppointment)
-		parent.POST("/payments", p.PostParentPayment)
+		teacher := R.Group("api/v1/teacher/:tid")
+		{
+			teacher.GET("/info", t.GetTeacherInfo)
+			teacher.GET("/notifications", t.GetTeacherNotifications)
+			teacher.GET("/appointments", t.GetTeacherAppointments)
+			teacher.GET("/agenda", t.GetTeacherAgenda)
+			teacher.GET("/classes", t.GetTeacherClasses)
+			teacher.GET("/classes/:cid/grades", t.GetTeacherClassGrades)
+			teacher.POST("/grades", t.PostTeacherClassGrades)
+			teacher.POST("/info", t.PostTeacherInfo)
+			teacher.POST("/appointments", t.PostAppointmentInfo)
+		}
+		parent := R.Group("api/v1/parent/:pid")
+		{
+			parent.GET("/info", p.GetParentInfo)
+			parent.GET("/notifications", p.GetParentNotifications)
+			parent.GET("/appointments", p.GetParentAppointments)
+			parent.GET("/students", p.GetParentStudents)
+			parent.GET("/students/:sid", d.GetStudentInfo)
+			parent.GET("/students/:sid/subjects", d.GetStudentSubjects)
+			parent.GET("/students/:sid/grades", p.GetParentStudentsGrades)
+			parent.GET("/payments", p.GetParentPayments)
+			parent.POST("/info", p.PostParentInfo)
+			parent.POST("/students/:sid", d.PostStudentInfo)
+			parent.POST("/appointments", p.PostParentAppointment)
+			parent.POST("/payments", p.PostParentPayment)
+		}
+		class := R.Group("api/v1/classes")
+		{
+			class.GET("/", c.GetClasses)
+			class.GET("/:cid", c.GetClasses)
+			class.GET("/:cid/students", c.GetClassStudents)
+		}
+		student := R.Group("api/v1/student/:sid")
+		{
+			student.GET("/info", d.GetStudentInfo)
+			student.GET("/grades", d.GetStudentGrades)
+			student.GET("/parents", d.GetStudentParents)
+			student.POST("/info", d.PostStudentInfo)
+		}
+		admin := R.Group("api/v1/admin/:aid")
+		{
+			admin.GET("/../list", a.GetAdminList)
+			admin.POST("/info", a.PostAdminInfo)
+			admin.POST("/notifications", a.PostAdminNotification)
+			admin.POST("/parents", a.PostAdminParent)
+			admin.POST("/payments", a.PostAdminPayment)
+			admin.POST("/students", a.PostAdminStudent)
+			admin.POST("/teachers", a.PostAdminTeacher)
+		}
 	}
-
-	class := R.Group("api/v1/classes")
-	{
-		class.GET("/", c.GetClasses)
-		class.GET("/:cid", c.GetClasses)
-		class.GET("/:cid/students", c.GetClassStudents)
-	}
-
-	student := R.Group("api/v1/student/:sid")
-	{
-		student.GET("/info", d.GetStudentInfo)
-		student.GET("/grades", d.GetStudentGrades)
-		student.GET("/parents", d.GetStudentParents)
-		student.POST("/info", d.PostStudentInfo)
-	}
-
-	admin := R.Group("api/v1/admin/:aid")
-	{
-		admin.GET("/../list", a.GetAdminList)
-		admin.POST("/info", a.PostAdminInfo)
-		admin.POST("/notifications", a.PostAdminNotification)
-		admin.POST("/parents", a.PostAdminParent)
-		admin.POST("/payments", a.PostAdminPayment)
-		admin.POST("/students", a.PostAdminStudent)
-		admin.POST("/teachers", a.PostAdminTeacher)
-	}
-
+	privateAPI.Use(rgAdapter)
 	R.GET("api/v1/test", GenerateTestData)
 
 }
@@ -513,30 +514,32 @@ func GenerateTestData(c *gin.Context) {
 }
 
 // PostLogin is the function that handles basic login. It returns a User object if login is successful, 404 otherwise.
+//
+// Input: User Object.
+//
+// Output: Post Response.
 func PostLogin(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
 	var user m.User
 	var post m.PostResponse
 	c.Bind(&user)
-	session := sessions.Default(c)
-	var count int
-	v := session.Get("count")
-	if v == nil {
-		count = 0
-	} else {
-		count = v.(int)
-		count++
-	}
-	session.Set("count", count)
-	session.Save()
 	username := user.Username
 	password := user.Password
 	var dbUser m.User
-	db.Where("username = ? and password = ?", username, password).Find(&dbUser)
+	db.Where("username = ?", username).Find(&dbUser)
 	if dbUser.Username != "" {
-		dbUser.Password = ""
-		c.JSON(http.StatusOK, dbUser)
+		err := bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(password))
+		if err == nil {
+			session := sessions.Default(c)
+			session.Set("user", dbUser.Username)
+			session.Save()
+			c.JSON(http.StatusOK, dbUser)
+		} else {
+			post.Code = 409
+			post.Message = "Incorret Login"
+			c.JSON(http.StatusBadRequest, post)
+		}
 	} else {
 		post.Code = 409
 		post.Message = "Incorret Login"
@@ -544,7 +547,54 @@ func PostLogin(c *gin.Context) {
 	}
 }
 
+// PostLogout is the function that handles basic logout.
+//
+// Input: None.
+//
+// Output: Post Response.
+func PostLogout(c *gin.Context) {
+	var post m.PostResponse
+	session := sessions.Default(c)
+	user := session.Get("user")
+	if user == nil {
+		post.Code = 505
+		post.Message = "No user is logged in."
+		c.JSON(http.StatusBadRequest, post)
+	} else {
+		session.Delete("user")
+		session.Save()
+		post.Code = 200
+		post.Message = "User Logged Out Successfully."
+		c.JSON(http.StatusOK, post)
+	}
+}
+
 // truncate simply truncates the decimal part of a number down to n decimal places.
 func truncate(x float64, n int) float64 {
 	return math.Floor(x*math.Pow(10, float64(n))) * math.Pow(10, -float64(n))
+}
+
+var src = rand.NewSource(time.Now().UnixNano())
+
+const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+const (
+	letterIdxBits = 6                    // 6 bits to represent a letter index
+	letterIdxMask = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
+	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
+)
+
+func genRandStr(n int) string {
+	b := make([]byte, n)
+	for i, cache, remain := n-1, src.Int63(), letterIdxMax; i >= 0; {
+		if remain == 0 {
+			cache, remain = src.Int63(), letterIdxMax
+		}
+		if idx := int(cache & letterIdxMask); idx < len(letterBytes) {
+			b[i] = letterBytes[idx]
+			i--
+		}
+		cache >>= letterIdxBits
+		remain--
+	}
+	return string(b)
 }

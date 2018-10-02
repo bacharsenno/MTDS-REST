@@ -34,7 +34,7 @@ func GetTeacherInfo(c *gin.Context) {
 		db.Where("username = ?", id).First(&teacher)
 		c.JSON(http.StatusOK, teacher)
 	} else {
-		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
+		c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
 	}
 }
 
@@ -67,7 +67,7 @@ func GetTeacherNotifications(c *gin.Context) {
 			c.JSON(http.StatusOK, make([]string, 0))
 		}
 	} else {
-		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
+		c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
 	}
 }
 
@@ -113,7 +113,7 @@ func GetTeacherAppointments(c *gin.Context) {
 			c.JSON(http.StatusOK, make([]string, 0))
 		}
 	} else {
-		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
+		c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
 	}
 }
 
@@ -174,7 +174,7 @@ func GetTeacherAgenda(c *gin.Context) {
 			c.JSON(http.StatusOK, make([]string, 0))
 		}
 	} else {
-		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
+		c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
 	}
 }
 
@@ -211,7 +211,7 @@ func GetTeacherClasses(c *gin.Context) {
 			c.JSON(http.StatusOK, make([]string, 0))
 		}
 	} else {
-		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
+		c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
 	}
 }
 
@@ -258,7 +258,7 @@ func GetTeacherClassGrades(c *gin.Context) {
 			c.JSON(http.StatusOK, make([]string, 0))
 		}
 	} else {
-		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
+		c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
 	}
 }
 
@@ -281,7 +281,7 @@ func PostTeacherClassGrades(c *gin.Context) {
 	for i := 0; i < len(grades); i++ {
 		if !m.IsAuthorized(c, db, grades[i].TeacherID) {
 			isAuthorized = false
-			c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
+			c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
 			return
 		}
 		if grades[i].StudentID == "" {
@@ -297,7 +297,7 @@ func PostTeacherClassGrades(c *gin.Context) {
 		}
 		c.JSON(http.StatusOK, grades)
 	} else {
-		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
+		c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
 	}
 
 }
@@ -342,7 +342,7 @@ func PostTeacherInfo(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, post)
 		}
 	} else {
-		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
+		c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
 	}
 }
 
@@ -369,6 +369,6 @@ func PostAppointmentInfo(c *gin.Context) {
 		db.Save(&appointment)
 		c.JSON(http.StatusOK, appointment)
 	} else {
-		c.JSON(http.StatusUnauthorized, m.UNAUTHORIZED_RESPONSE)
+		c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
 	}
 }

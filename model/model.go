@@ -4,6 +4,7 @@ package model
 import (
 	"time"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 )
@@ -341,34 +342,38 @@ func GetDateString(offset int) string {
 	return dateString
 }
 
-var UNAUTHORIZED_RESPONSE = PostResponse{Code: 401, Message: "You are not authorized to access this resource."}
+var Unauthorized_Response = PostResponse{Code: 401, Message: "You are not authorized to access this resource."}
 
-// isAuthorized checks if the logged user is authorized to access the required resource
-func IsAuthorized(c *gin.Context, db *gorm.DB, paramId string) bool {
-	requestKey := c.GetHeader("X-Auth-Key")
-
-	var user User
-	db.Where("username = ?", requestKey).First(&user)
-
-	//if the logged user is an Admin or its id correspond to the one on the request returns true
-	if user.Type == 0 || requestKey == paramId {
-		return true
-	} else {
+// IsAuthorized checks if the logged user is authorized to access the required resource
+func IsAuthorized(c *gin.Context, db *gorm.DB, paramID string) bool {
+	session := sessions.Default(c)
+	sessionUser := session.Get("user")
+	if sessionUser == nil {
 		return false
 	}
-}
-
-// isAuthorized check if the logged user is authorized to access the required resource according to its type
-func IsAuthorizedUserType(c *gin.Context, db *gorm.DB, userType int) bool {
 	requestKey := c.GetHeader("X-Auth-Key")
-
 	var user User
 	db.Where("username = ?", requestKey).First(&user)
+	//if the logged user is an Admin or its id correspond to the one on the request returns true
+	if user.Type == 0 || requestKey == paramID {
+		return true
+	}
+	return false
+}
 
+// IsAuthorizedUserType check if the logged user is authorized to access the required resource according to its type
+func IsAuthorizedUserType(c *gin.Context, db *gorm.DB, userType int) bool {
+	session := sessions.Default(c)
+	sessionUser := session.Get("user")
+	if sessionUser == nil {
+		return false
+	}
+	requestKey := c.GetHeader("X-Auth-Key")
+	var user User
+	db.Where("username = ?", requestKey).First(&user)
 	//if the logged user is an Admin or its id correspond to the one on the request returns true
 	if user.Type == 0 || user.Type == userType {
 		return true
-	} else {
-		return false
 	}
+	return false
 }
