@@ -532,7 +532,7 @@ func PostLogin(c *gin.Context) {
 		err := bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(password))
 		if err == nil {
 			session := sessions.Default(c)
-			session.Set("user", dbUser.Username)
+			session.Set(dbUser.Username, dbUser.Username)
 			session.Save()
 			c.JSON(http.StatusOK, dbUser)
 		} else {
@@ -555,16 +555,18 @@ func PostLogin(c *gin.Context) {
 func PostLogout(c *gin.Context) {
 	var post m.PostResponse
 	session := sessions.Default(c)
-	user := session.Get("user")
+	var loggedUser m.User
+	c.Bind(&loggedUser)
+	user := session.Get(loggedUser.Username)
 	if user == nil {
 		post.Code = 505
-		post.Message = "No user is logged in."
+		post.Message = "User " + loggedUser.Username + " is not logged in."
 		c.JSON(http.StatusBadRequest, post)
 	} else {
-		session.Delete("user")
+		session.Delete(user)
 		session.Save()
 		post.Code = 200
-		post.Message = "User Logged Out Successfully."
+		post.Message = "User " + loggedUser.Username + " Logged Out Successfully."
 		c.JSON(http.StatusOK, post)
 	}
 }

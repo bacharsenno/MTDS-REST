@@ -342,16 +342,16 @@ func GetDateString(offset int) string {
 	return dateString
 }
 
-var Unauthorized_Response = PostResponse{Code: 401, Message: "You are not authorized to access this resource."}
+var UnauthorizedResponse = PostResponse{Code: 401, Message: "You are not authorized to access this resource."}
 
 // IsAuthorized checks if the logged user is authorized to access the required resource
 func IsAuthorized(c *gin.Context, db *gorm.DB, paramID string) bool {
+	requestKey := c.GetHeader("X-Auth-Key")
 	session := sessions.Default(c)
-	sessionUser := session.Get("user")
+	sessionUser := session.Get(requestKey)
 	if sessionUser == nil {
 		return false
 	}
-	requestKey := c.GetHeader("X-Auth-Key")
 	var user User
 	db.Where("username = ?", requestKey).First(&user)
 	//if the logged user is an Admin or its id correspond to the one on the request returns true
@@ -363,12 +363,12 @@ func IsAuthorized(c *gin.Context, db *gorm.DB, paramID string) bool {
 
 // IsAuthorizedUserType check if the logged user is authorized to access the required resource according to its type
 func IsAuthorizedUserType(c *gin.Context, db *gorm.DB, userType int) bool {
+	requestKey := c.GetHeader("X-Auth-Key")
 	session := sessions.Default(c)
-	sessionUser := session.Get("user")
+	sessionUser := session.Get(requestKey)
 	if sessionUser == nil {
 		return false
 	}
-	requestKey := c.GetHeader("X-Auth-Key")
 	var user User
 	db.Where("username = ?", requestKey).First(&user)
 	//if the logged user is an Admin or its id correspond to the one on the request returns true

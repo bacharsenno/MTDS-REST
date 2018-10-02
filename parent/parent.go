@@ -31,7 +31,7 @@ func GetParentInfo(c *gin.Context) {
 		db.Where("username = ?", username).Find(&parent)
 		c.JSON(http.StatusOK, parent)
 	} else {
-		c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
+		c.JSON(http.StatusUnauthorized, m.UnauthorizedResponse)
 	}
 
 }
@@ -64,7 +64,7 @@ func GetParentNotifications(c *gin.Context) {
 			c.JSON(http.StatusOK, make([]string, 0))
 		}
 	} else {
-		c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
+		c.JSON(http.StatusUnauthorized, m.UnauthorizedResponse)
 	}
 }
 
@@ -110,7 +110,7 @@ func GetParentAppointments(c *gin.Context) {
 			c.JSON(http.StatusOK, make([]string, 0))
 		}
 	} else {
-		c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
+		c.JSON(http.StatusUnauthorized, m.UnauthorizedResponse)
 	}
 }
 
@@ -142,7 +142,7 @@ func GetParentStudents(c *gin.Context) {
 			c.JSON(http.StatusOK, make([]string, 0))
 		}
 	} else {
-		c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
+		c.JSON(http.StatusUnauthorized, m.UnauthorizedResponse)
 	}
 }
 
@@ -215,7 +215,7 @@ func GetParentStudentsGrades(c *gin.Context) {
 			c.JSON(http.StatusOK, make([]string, 0))
 		}
 	} else {
-		c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
+		c.JSON(http.StatusUnauthorized, m.UnauthorizedResponse)
 	}
 }
 
@@ -260,7 +260,7 @@ func GetParentPayments(c *gin.Context) {
 			c.JSON(http.StatusOK, make([]string, 0))
 		}
 	} else {
-		c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
+		c.JSON(http.StatusUnauthorized, m.UnauthorizedResponse)
 	}
 }
 
@@ -304,7 +304,7 @@ func PostParentInfo(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, post)
 		}
 	} else {
-		c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
+		c.JSON(http.StatusUnauthorized, m.UnauthorizedResponse)
 	}
 }
 
@@ -336,7 +336,7 @@ func PostParentAppointment(c *gin.Context) {
 			db.Save(&appointment)
 			c.JSON(http.StatusOK, appointment)
 		} else {
-			c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
+			c.JSON(http.StatusUnauthorized, m.UnauthorizedResponse)
 		}
 	}
 }
@@ -377,7 +377,7 @@ func PostParentPayment(c *gin.Context) {
 				c.JSON(http.StatusOK, payment)
 			}
 		} else {
-			c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
+			c.JSON(http.StatusUnauthorized, m.UnauthorizedResponse)
 		}
 	}
 }

@@ -35,7 +35,7 @@ func GetClasses(c *gin.Context) {
 			c.JSON(http.StatusOK, make([]string, 0))
 		}
 	} else {
-		c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
+		c.JSON(http.StatusUnauthorized, m.UnauthorizedResponse)
 	}
 }
 
@@ -67,6 +67,6 @@ func GetClassStudents(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, make([]string, 0))
 		}
 	} else {
-		c.JSON(http.StatusUnauthorized, m.Unauthorized_Response)
+		c.JSON(http.StatusUnauthorized, m.UnauthorizedResponse)
 	}
 }
