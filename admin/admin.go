@@ -85,7 +85,7 @@ func PostAdminNotification(c *gin.Context) {
 	aid := c.Params.ByName("aid")
 
 	if m.IsAuthorized(c, db, aid) {
-		if notification.StartDate.Before(time.Now()) || notification.EndDate.Before(time.Now()) {
+		if notification.StartDate.Before(time.Now()) && notification.EndDate.Before(time.Now()) && notification.StartDate.Before(notification.EndDate) {
 			post.Code = 400
 			post.Message = "StartDate/EndDate shouldn't be in the past"
 			c.JSON(http.StatusBadRequest, post)
@@ -104,7 +104,7 @@ func PostAdminNotification(c *gin.Context) {
 //
 // Output: Post Response
 //
-// Example URL: http://localhost:8080/api/v1/admin/A1/students
+// Example URL: http://localhost:8080/api/v1/admin/A1/students/ || http://localhost:8080/api/v1/admin/A1/students/S1
 func PostAdminStudent(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -112,27 +112,33 @@ func PostAdminStudent(c *gin.Context) {
 	var post m.PostResponse
 	c.Bind(&student)
 	aid := c.Params.ByName("aid")
-
-	if m.IsAuthorized(c, db, aid) {
-		if student.FirstName == "" || student.LastName == "" || student.ClassID == "" {
-			post.Code = 400
-			post.Message = "Missing Parameters"
-			c.JSON(http.StatusBadRequest, post)
-		} else {
-			if student.Username == "" {
-				var lastStudent m.Student
-				db.Limit(1).Order("LENGTH(username) desc, username desc").Find(&lastStudent)
-				id := lastStudent.Username
-				id = s.Trim(id, "S")
-				num, _ := strconv.Atoi(id)
-				num++
-				student.Username = "S" + strconv.Itoa(num)
-			}
-			db.Save(&student)
-			c.JSON(http.StatusOK, student)
-		}
+	urlParam := c.Params.ByName("sid")
+	if urlParam != "" && urlParam != student.Username {
+		post.Code = 405
+		post.Message = "Parameter Mismatch"
+		c.JSON(http.StatusBadRequest, post)
 	} else {
-		c.JSON(http.StatusUnauthorized, m.UnauthorizedResponse)
+		if m.IsAuthorized(c, db, aid) {
+			if student.FirstName == "" || student.LastName == "" || student.ClassID == "" {
+				post.Code = 400
+				post.Message = "Missing Parameters"
+				c.JSON(http.StatusBadRequest, post)
+			} else {
+				if student.Username == "" && c.Params.ByName("sid") == "" {
+					var lastStudent m.Student
+					db.Limit(1).Order("LENGTH(username) desc, username desc").Find(&lastStudent)
+					id := lastStudent.Username
+					id = s.Trim(id, "S")
+					num, _ := strconv.Atoi(id)
+					num++
+					student.Username = "S" + strconv.Itoa(num)
+				}
+				db.Save(&student)
+				c.JSON(http.StatusOK, student)
+			}
+		} else {
+			c.JSON(http.StatusUnauthorized, m.UnauthorizedResponse)
+		}
 	}
 }
 
@@ -142,7 +148,7 @@ func PostAdminStudent(c *gin.Context) {
 //
 // Output: Post Response
 //
-// Example URL: http://localhost:8080/api/v1/admin/A1/parents
+// Example URL: http://localhost:8080/api/v1/admin/A1/parents || http://localhost:8080/api/v1/admin/A1/parents/P1
 func PostAdminParent(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -150,33 +156,39 @@ func PostAdminParent(c *gin.Context) {
 	var post m.PostResponse
 	c.Bind(&parent)
 	aid := c.Params.ByName("aid")
-
-	if m.IsAuthorized(c, db, aid) {
-		if parent.FirstName != "" && parent.LastName != "" && parent.Email != "" {
-			if parent.Username == "" {
-				var lastParent m.Parent
-				db.Limit(1).Order("LENGTH(username) desc, username desc").Find(&lastParent)
-				id := lastParent.Username
-				id = s.Trim(id, "P")
-				num, _ := strconv.Atoi(id)
-				num++
-				parent.Username = "P" + strconv.Itoa(num)
-				user := m.User{
-					Username: parent.Username,
-					Password: "PP" + strconv.Itoa(num),
-					Type:     2,
-				}
-				db.Save(&user)
-			}
-			db.Save(&parent)
-			c.JSON(http.StatusOK, parent)
-		} else {
-			post.Code = 400
-			post.Message = "Missing Parameters"
-			c.JSON(http.StatusBadRequest, post)
-		}
+	urlParam := c.Params.ByName("pid")
+	if urlParam != "" && urlParam != parent.Username {
+		post.Code = 405
+		post.Message = "Parameter Mismatch"
+		c.JSON(http.StatusBadRequest, post)
 	} else {
-		c.JSON(http.StatusUnauthorized, m.UnauthorizedResponse)
+		if m.IsAuthorized(c, db, aid) {
+			if parent.FirstName != "" && parent.LastName != "" && parent.Email != "" {
+				if parent.Username == "" {
+					var lastParent m.Parent
+					db.Limit(1).Order("LENGTH(username) desc, username desc").Find(&lastParent)
+					id := lastParent.Username
+					id = s.Trim(id, "P")
+					num, _ := strconv.Atoi(id)
+					num++
+					parent.Username = "P" + strconv.Itoa(num)
+					user := m.User{
+						Username: parent.Username,
+						Password: "PP" + strconv.Itoa(num),
+						Type:     2,
+					}
+					db.Save(&user)
+				}
+				db.Save(&parent)
+				c.JSON(http.StatusOK, parent)
+			} else {
+				post.Code = 400
+				post.Message = "Missing Parameters"
+				c.JSON(http.StatusBadRequest, post)
+			}
+		} else {
+			c.JSON(http.StatusUnauthorized, m.UnauthorizedResponse)
+		}
 	}
 }
 
@@ -186,7 +198,7 @@ func PostAdminParent(c *gin.Context) {
 //
 // Output: Post Response
 //
-// Example URL: http://localhost:8080/api/v1/admin/A1/teachers
+// Example URL: http://localhost:8080/api/v1/admin/A1/teachers || http://localhost:8080/api/v1/admin/A1/teachers/T1
 func PostAdminTeacher(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -194,33 +206,39 @@ func PostAdminTeacher(c *gin.Context) {
 	var post m.PostResponse
 	c.Bind(&teacher)
 	aid := c.Params.ByName("aid")
-
-	if m.IsAuthorized(c, db, aid) {
-		if teacher.FirstName != "" && teacher.LastName != "" && teacher.ProfilePic != "" {
-			if teacher.Username == "" {
-				var lastTeacher m.Teacher
-				db.Limit(1).Order("LENGTH(username) desc, username desc").Find(&lastTeacher)
-				id := lastTeacher.Username
-				id = s.Trim(id, "T")
-				num, _ := strconv.Atoi(id)
-				num++
-				teacher.Username = "T" + strconv.Itoa(num)
-				user := m.User{
-					Username: teacher.Username,
-					Password: "TP" + strconv.Itoa(num),
-					Type:     1,
-				}
-				db.Save(&user)
-			}
-			db.Save(&teacher)
-			c.JSON(http.StatusOK, teacher)
-		} else {
-			post.Code = 400
-			post.Message = "Missing Parameters"
-			c.JSON(http.StatusBadRequest, post)
-		}
+	urlParam := c.Params.ByName("tid")
+	if urlParam != "" && urlParam != teacher.Username {
+		post.Code = 405
+		post.Message = "Parameter Mismatch"
+		c.JSON(http.StatusBadRequest, post)
 	} else {
-		c.JSON(http.StatusUnauthorized, m.UnauthorizedResponse)
+		if m.IsAuthorized(c, db, aid) {
+			if teacher.FirstName != "" && teacher.LastName != "" && teacher.ProfilePic != "" {
+				if teacher.Username == "" {
+					var lastTeacher m.Teacher
+					db.Limit(1).Order("LENGTH(username) desc, username desc").Find(&lastTeacher)
+					id := lastTeacher.Username
+					id = s.Trim(id, "T")
+					num, _ := strconv.Atoi(id)
+					num++
+					teacher.Username = "T" + strconv.Itoa(num)
+					user := m.User{
+						Username: teacher.Username,
+						Password: "TP" + strconv.Itoa(num),
+						Type:     1,
+					}
+					db.Save(&user)
+				}
+				db.Save(&teacher)
+				c.JSON(http.StatusOK, teacher)
+			} else {
+				post.Code = 400
+				post.Message = "Missing Parameters"
+				c.JSON(http.StatusBadRequest, post)
+			}
+		} else {
+			c.JSON(http.StatusUnauthorized, m.UnauthorizedResponse)
+		}
 	}
 }
 
@@ -230,7 +248,7 @@ func PostAdminTeacher(c *gin.Context) {
 //
 // Output: Post Response
 //
-// Example URL: http://localhost:8080/api/v1/admin/A1/payments
+// Example URL: http://localhost:8080/api/v1/admin/A1/payments || http://localhost:8080/api/v1/admin/A1/payments/PID5
 func PostAdminPayment(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -238,25 +256,31 @@ func PostAdminPayment(c *gin.Context) {
 	var post m.PostResponse
 	c.Bind(&payment)
 	aid := c.Params.ByName("aid")
-
-	if m.IsAuthorized(c, db, aid) {
-		if payment.StudentID == "" {
-			post.Code = 400
-			post.Message = "Missing Parameters"
-			c.JSON(http.StatusBadRequest, post)
-		} else {
-			if payment.PaymentID == "" {
-				var lastPayment m.Payment
-				db.Limit(1).Order("LENGTH(payment_id) desc, payment_id desc").Find(&lastPayment)
-				pid := lastPayment.PaymentID
-				num, _ := strconv.Atoi(s.Trim(pid, "PID"))
-				num++
-				payment.PaymentID = "PID" + strconv.Itoa(num)
-			}
-			db.Save(&payment)
-			c.JSON(http.StatusOK, payment)
-		}
+	urlParam := c.Params.ByName("pid")
+	if urlParam != "" && urlParam != payment.PaymentID {
+		post.Code = 405
+		post.Message = "Parameter Mismatch"
+		c.JSON(http.StatusBadRequest, post)
 	} else {
-		c.JSON(http.StatusUnauthorized, m.UnauthorizedResponse)
+		if m.IsAuthorized(c, db, aid) {
+			if payment.StudentID == "" {
+				post.Code = 400
+				post.Message = "Missing Parameters"
+				c.JSON(http.StatusBadRequest, post)
+			} else {
+				if payment.PaymentID == "" {
+					var lastPayment m.Payment
+					db.Limit(1).Order("LENGTH(payment_id) desc, payment_id desc").Find(&lastPayment)
+					pid := lastPayment.PaymentID
+					num, _ := strconv.Atoi(s.Trim(pid, "PID"))
+					num++
+					payment.PaymentID = "PID" + strconv.Itoa(num)
+				}
+				db.Save(&payment)
+				c.JSON(http.StatusOK, payment)
+			}
+		} else {
+			c.JSON(http.StatusUnauthorized, m.UnauthorizedResponse)
+		}
 	}
 }

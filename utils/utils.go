@@ -94,12 +94,18 @@ func SetupRoutes() {
 	R.Use(csrf.Middleware(csrf.Options{
 		Secret: secret,
 		ErrorFunc: func(c *gin.Context) {
-			c.String(400, "CSRF token mismatch")
+			var post m.PostResponse
+			post.Code = http.StatusBadRequest
+			post.Message = "CSRF token mismatch"
+			c.JSON(http.StatusBadRequest, post)
 			c.Abort()
 		},
 	}))
-	R.GET("/protected", func(c *gin.Context) {
-		c.String(200, csrf.GetToken(c))
+	R.GET("api/v1/protected", func(c *gin.Context) {
+		var post m.PostResponse
+		post.Code = http.StatusOK
+		post.Message = csrf.GetToken(c)
+		c.JSON(http.StatusOK, post)
 	})
 
 	R.POST("api/v1/login", PostLogin)
@@ -154,9 +160,13 @@ func SetupRoutes() {
 			admin.POST("/info", a.PostAdminInfo)
 			admin.POST("/notifications", a.PostAdminNotification)
 			admin.POST("/parents", a.PostAdminParent)
-			admin.POST("/payments", a.PostAdminPayment)
+			admin.PUT("/parents/:pid", a.PostAdminParent)
 			admin.POST("/students", a.PostAdminStudent)
+			admin.PUT("/students/:sid", a.PostAdminStudent)
 			admin.POST("/teachers", a.PostAdminTeacher)
+			admin.PUT("/teachers/:tid", a.PostAdminTeacher)
+			admin.POST("/payments", a.PostAdminPayment)
+			admin.PUT("/payments/:pid", a.PostAdminPayment)
 		}
 	}
 	privateAPI.Use(rgAdapter)

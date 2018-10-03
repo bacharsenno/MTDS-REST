@@ -115,7 +115,7 @@ type Payment struct {
 
 // Notification is the basic notification struct containing all related info.
 //
-// Status = 1 for active, 2 for discarded, 0 for expired.
+// Status = 1 for active, 2 for discarded, 0 for expired; DestinationID = T1/P1/Teachers/Parents/ALL
 //
 // Topic = Trip, Parent-Teacher Conference, Holidays etc...
 type Notification struct {
