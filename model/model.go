@@ -81,8 +81,8 @@ type Grade struct {
 	Subject   string    `gorm:"PRIMARY_KEY" form:"Subject" json:"Subject"`
 	Year      int       `gorm:"PRIMARY_KEY" form:"Year" json:"Year"`
 	Semester  int       `gorm:"PRIMARY_KEY" form:"Semester" json:"Semester"`
-	Type      string    `form:"Type" json:"Type"`
-	Date      time.Time `form:"Date" json:"Date"`
+	Type      string    `gorm:"PRIMARY_KEY form:"Type" json:"Type"`
+	Date      time.Time `gorm:"PRIMARY_KEY form:"Date" json:"Date"`
 	Grade     float64   `form:"Grade" json:"Grade"`
 	Remarks   string    `form:"Remarks" json:"Remarks"`
 }
