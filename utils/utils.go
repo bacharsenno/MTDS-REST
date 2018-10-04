@@ -101,6 +101,7 @@ func SetupRoutes() {
 			c.Abort()
 		},
 	}))
+
 	R.GET("api/v1/protected", func(c *gin.Context) {
 		var post m.PostResponse
 		post.Code = http.StatusOK
@@ -109,8 +110,6 @@ func SetupRoutes() {
 	})
 
 	R.POST("api/v1/login", PostLogin)
-
-	R.POST("api/v1/logout", PostLogout)
 
 	privateAPI := R.Group("")
 	{
@@ -168,6 +167,7 @@ func SetupRoutes() {
 			admin.POST("/payments", a.PostAdminPayment)
 			admin.PUT("/payments/:pid", a.PostAdminPayment)
 		}
+		R.POST("api/v1/logout", PostLogout)
 	}
 	privateAPI.Use(rgAdapter)
 	R.GET("api/v1/test", GenerateTestData)
@@ -547,12 +547,12 @@ func PostLogin(c *gin.Context) {
 			c.JSON(http.StatusOK, dbUser)
 		} else {
 			post.Code = 409
-			post.Message = "Incorret Login"
+			post.Message = "Incorrect Login"
 			c.JSON(http.StatusBadRequest, post)
 		}
 	} else {
 		post.Code = 409
-		post.Message = "Incorret Login"
+		post.Message = "Incorrect Login"
 		c.JSON(http.StatusBadRequest, post)
 	}
 }
@@ -563,21 +563,33 @@ func PostLogin(c *gin.Context) {
 //
 // Output: Post Response.
 func PostLogout(c *gin.Context) {
+	db := initDb()
+	defer db.Close()
 	var post m.PostResponse
 	session := sessions.Default(c)
 	var loggedUser m.User
 	c.Bind(&loggedUser)
-	user := session.Get(loggedUser.Username)
+	username := loggedUser.Username
+	password := loggedUser.Password
+	user := session.Get(username)
 	if user == nil {
 		post.Code = 505
 		post.Message = "User " + loggedUser.Username + " is not logged in."
 		c.JSON(http.StatusBadRequest, post)
 	} else {
-		session.Delete(user)
-		session.Save()
-		post.Code = 200
-		post.Message = "User " + loggedUser.Username + " Logged Out Successfully."
-		c.JSON(http.StatusOK, post)
+		var dbUser m.User
+		db.Where("username = ?", username).Find(&dbUser)
+		if password == dbUser.Password && username == c.GetHeader("X-Auth-Key") {
+			session.Delete(user)
+			session.Save()
+			post.Code = 200
+			post.Message = "User " + loggedUser.Username + " Logged Out Successfully."
+			c.JSON(http.StatusOK, post)
+		} else {
+			post.Code = 405
+			post.Message = "Wrong Credentials. Logout Failed."
+			c.JSON(http.StatusBadRequest, post)
+		}
 	}
 }
 
