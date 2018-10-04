@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
 )
 
 var initDb = m.InitDb
@@ -317,23 +316,7 @@ func PostTeacherInfo(c *gin.Context) {
 	var post m.PostResponse
 	c.Bind(&teacher)
 	if m.IsAuthorized(c, db, id) && m.IsAuthorized(c, db, teacher.Username) {
-		if teacher.FirstName != "" && teacher.LastName != "" && teacher.ProfilePic != "" && teacher.DateOfBirth.String() != "0001-01-01 00:00:00 +0000 UTC" {
-			if teacher.Username == "" {
-				var lastTeacher m.Teacher
-				db.Limit(1).Order("LENGTH(username) desc, username desc").Find(&lastTeacher)
-				id := lastTeacher.Username
-				id = s.Trim(id, "T")
-				num, _ := strconv.Atoi(id)
-				num++
-				teacher.Username = "T" + strconv.Itoa(num)
-				password, _ := bcrypt.GenerateFromPassword([]byte("TP"+strconv.Itoa(num)), bcrypt.DefaultCost)
-				user := m.User{
-					Username: teacher.Username,
-					Password: string(password),
-					Type:     1,
-				}
-				db.Save(&user)
-			}
+		if teacher.Username != "" && teacher.FirstName != "" && teacher.LastName != "" && teacher.ProfilePic != "" && teacher.DateOfBirth.String() != "0001-01-01 00:00:00 +0000 UTC" {
 			db.Save(&teacher)
 			c.JSON(http.StatusOK, teacher)
 		} else {
@@ -352,23 +335,30 @@ func PostTeacherInfo(c *gin.Context) {
 //
 // Output: Post Response
 //
-// Example URL: http://localhost:8080/api/v1/teacher/T1/appointments
+// Example URL: http://localhost:8080/api/v1/teacher/T1/appointments || http://localhost:8080/api/v1/teacher/T1/appointments/2
 func PostAppointmentInfo(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
+	var post m.PostResponse
 	id := c.Params.ByName("tid")
 	var appointment m.Appointment
 	c.Bind(&appointment)
-
-	if m.IsAuthorized(c, db, id) && m.IsAuthorized(c, db, appointment.TeacherID) {
-		if appointment.AppointmentID == 0 {
-			var lastAppointment m.Appointment
-			db.Limit(1).Order("LENGTH(appointment_id) desc, appointment_id desc").Find(&lastAppointment)
-			appointment.AppointmentID = lastAppointment.AppointmentID + 1
-		}
-		db.Save(&appointment)
-		c.JSON(http.StatusOK, appointment)
+	urlParam := c.Params.ByName("aid")
+	if urlParam != "" && urlParam != string(appointment.AppointmentID) {
+		post.Code = 405
+		post.Message = "Parameter Mismatch"
+		c.JSON(http.StatusBadRequest, post)
 	} else {
-		c.JSON(http.StatusUnauthorized, m.UnauthorizedResponse)
+		if m.IsAuthorized(c, db, id) && m.IsAuthorized(c, db, appointment.TeacherID) {
+			if appointment.AppointmentID == 0 {
+				var lastAppointment m.Appointment
+				db.Limit(1).Order("LENGTH(appointment_id) desc, appointment_id desc").Find(&lastAppointment)
+				appointment.AppointmentID = lastAppointment.AppointmentID + 1
+			}
+			db.Save(&appointment)
+			c.JSON(http.StatusOK, appointment)
+		} else {
+			c.JSON(http.StatusUnauthorized, m.UnauthorizedResponse)
+		}
 	}
 }

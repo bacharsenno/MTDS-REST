@@ -278,24 +278,8 @@ func PostParentInfo(c *gin.Context) {
 	var parent m.Parent
 	var post m.PostResponse
 	c.Bind(&parent)
-
 	if m.IsAuthorized(c, db, username) && m.IsAuthorized(c, db, parent.Username) {
-		if parent.FirstName != "" && parent.LastName != "" && parent.Email != "" {
-			if parent.Username == "" {
-				var lastParent m.Parent
-				db.Limit(1).Order("LENGTH(username) desc, username desc").Find(&lastParent)
-				id := lastParent.Username
-				id = s.Trim(id, "P")
-				num, _ := strconv.Atoi(id)
-				num++
-				parent.Username = "P" + strconv.Itoa(num)
-				user := m.User{
-					Username: parent.Username,
-					Password: "PP" + strconv.Itoa(num),
-					Type:     2,
-				}
-				db.Save(&user)
-			}
+		if parent.FirstName != "" && parent.LastName != "" && parent.Email != "" && parent.Username == "" {
 			db.Save(&parent)
 			c.JSON(http.StatusOK, parent)
 		} else {
@@ -314,29 +298,36 @@ func PostParentInfo(c *gin.Context) {
 //
 // Output: Post Response
 //
-// Example URL: http://localhost:8080/api/v1/parent/P1/appointments
+// Example URL: http://localhost:8080/api/v1/parent/P1/appointments || http://localhost:8080/api/v1/parent/P1/appointments/2
 func PostParentAppointment(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
+	var post m.PostResponse
 	username := c.Params.ByName("pid")
 	var appointment m.Appointment
-	var post m.PostResponse
 	c.Bind(&appointment)
 	if appointment.ParentID == "" || appointment.TeacherID == "" {
 		post.Code = 400
 		post.Message = "Missing Data"
 		c.JSON(http.StatusBadRequest, post)
 	} else {
-		if m.IsAuthorized(c, db, username) && m.IsAuthorized(c, db, appointment.ParentID) {
-			if appointment.AppointmentID == 0 {
-				var lastAppointment m.Appointment
-				db.Limit(1).Order("LENGTH(appointment_id) desc, appointment_id desc").Find(&lastAppointment)
-				appointment.AppointmentID = lastAppointment.AppointmentID + 1
-			}
-			db.Save(&appointment)
-			c.JSON(http.StatusOK, appointment)
+		urlParam := c.Params.ByName("aid")
+		if urlParam != "" && urlParam != string(appointment.AppointmentID) {
+			post.Code = 405
+			post.Message = "Parameter Mismatch"
+			c.JSON(http.StatusBadRequest, post)
 		} else {
-			c.JSON(http.StatusUnauthorized, m.UnauthorizedResponse)
+			if m.IsAuthorized(c, db, username) && m.IsAuthorized(c, db, appointment.ParentID) {
+				if appointment.AppointmentID == 0 {
+					var lastAppointment m.Appointment
+					db.Limit(1).Order("LENGTH(appointment_id) desc, appointment_id desc").Find(&lastAppointment)
+					appointment.AppointmentID = lastAppointment.AppointmentID + 1
+				}
+				db.Save(&appointment)
+				c.JSON(http.StatusOK, appointment)
+			} else {
+				c.JSON(http.StatusUnauthorized, m.UnauthorizedResponse)
+			}
 		}
 	}
 }

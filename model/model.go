@@ -76,11 +76,11 @@ type Student struct {
 
 // Grade is the basic grade struct containing all related info. Fields are self-explanatory.
 type Grade struct {
-	TeacherID string    `form:"TeacherID" json:"TeacherID"`
-	StudentID string    `form:"StudentID" json:"StudentID"`
-	Subject   string    `form:"Subject" json:"Subject"`
-	Year      int       `form:"Year" json:"Year"`
-	Semester  int       `form:"Semester" json:"Semester"`
+	TeacherID string    `gorm:"PRIMARY_KEY" form:"TeacherID" json:"TeacherID"`
+	StudentID string    `gorm:"PRIMARY_KEY" form:"StudentID" json:"StudentID"`
+	Subject   string    `gorm:"PRIMARY_KEY" form:"Subject" json:"Subject"`
+	Year      int       `gorm:"PRIMARY_KEY" form:"Year" json:"Year"`
+	Semester  int       `gorm:"PRIMARY_KEY" form:"Semester" json:"Semester"`
 	Type      string    `form:"Type" json:"Type"`
 	Date      time.Time `form:"Date" json:"Date"`
 	Grade     float64   `form:"Grade" json:"Grade"`

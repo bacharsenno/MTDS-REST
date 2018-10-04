@@ -5,8 +5,6 @@ import (
 	m "MTDS-REST/model"
 
 	"net/http"
-	"strconv"
-	s "strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -134,9 +132,9 @@ func GetStudentParents(c *gin.Context) {
 	}
 }
 
-// PostStudentInfo edits the information of a specific student if his ID exists in the database; otherwise, it creates a new student with the provided data.
+// PostStudentInfo edits the information of a specific student if his ID exists in the database.
 //
-// Input: Student Data (ID Optional).
+// Input: Student Object.
 //
 // Output: Post Response
 //
@@ -153,20 +151,11 @@ func PostStudentInfo(c *gin.Context) {
 	db.Where("student_id = ?", sid).First(&parent)
 
 	if m.IsAuthorizedUserType(c, db, 0) || (m.IsAuthorized(c, db, pid) && pid == parent.ParentID && student.Username == sid) {
-		if student.FirstName == "" || student.LastName == "" || student.ClassID == "" {
+		if student.Username == "" || student.FirstName == "" || student.LastName == "" || student.ClassID == "" {
 			post.Code = 400
 			post.Message = "Missing Parameters"
 			c.JSON(http.StatusBadRequest, post)
 		} else {
-			if student.Username == "" {
-				var lastStudent m.Student
-				db.Limit(1).Order("LENGTH(username) desc, username desc").Find(&lastStudent)
-				id := lastStudent.Username
-				id = s.Trim(id, "S")
-				num, _ := strconv.Atoi(id)
-				num++
-				student.Username = "S" + strconv.Itoa(num)
-			}
 			db.Save(&student)
 			c.JSON(http.StatusOK, student)
 		}

@@ -122,8 +122,9 @@ func SetupRoutes() {
 			teacher.GET("/classes", t.GetTeacherClasses)
 			teacher.GET("/classes/:cid/grades", t.GetTeacherClassGrades)
 			teacher.POST("/grades", t.PostTeacherClassGrades)
-			teacher.POST("/info", t.PostTeacherInfo)
+			teacher.PUT("/info", t.PostTeacherInfo)
 			teacher.POST("/appointments", t.PostAppointmentInfo)
+			teacher.PUT("/appointments/:aid", t.PostAppointmentInfo)
 		}
 		parent := R.Group("api/v1/parent/:pid")
 		{
@@ -135,10 +136,11 @@ func SetupRoutes() {
 			parent.GET("/students/:sid/subjects", d.GetStudentSubjects)
 			parent.GET("/students/:sid/grades", p.GetParentStudentsGrades)
 			parent.GET("/payments", p.GetParentPayments)
-			parent.POST("/info", p.PostParentInfo)
-			parent.POST("/students/:sid", d.PostStudentInfo)
+			parent.PUT("/info", p.PostParentInfo)
+			parent.PUT("/students/:sid", d.PostStudentInfo)
 			parent.POST("/appointments", p.PostParentAppointment)
-			parent.POST("/payments", p.PostParentPayment)
+			parent.PUT("/appointments/:aid", p.PostParentAppointment)
+			parent.PUT("/payments", p.PostParentPayment)
 		}
 		class := R.Group("api/v1/classes")
 		{
@@ -151,7 +153,7 @@ func SetupRoutes() {
 			student.GET("/info", d.GetStudentInfo)
 			student.GET("/grades", d.GetStudentGrades)
 			student.GET("/parents", d.GetStudentParents)
-			student.POST("/info", d.PostStudentInfo)
+			student.PUT("/info", d.PostStudentInfo)
 		}
 		admin := R.Group("api/v1/admin/:aid")
 		{
