@@ -279,7 +279,7 @@ func PostParentInfo(c *gin.Context) {
 	var post m.PostResponse
 	c.Bind(&parent)
 	if m.IsAuthorized(c, db, username) && m.IsAuthorized(c, db, parent.Username) {
-		if parent.FirstName != "" && parent.LastName != "" && parent.Email != "" && parent.Username == "" {
+		if parent.FirstName != "" && parent.LastName != "" && parent.Email != "" && parent.Username != "" {
 			db.Save(&parent)
 			c.JSON(http.StatusOK, parent)
 		} else {

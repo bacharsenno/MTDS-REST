@@ -124,7 +124,11 @@ func PostAdminStudent(c *gin.Context) {
 				post.Message = "Missing Parameters"
 				c.JSON(http.StatusBadRequest, post)
 			} else {
-				if student.Username == "" && c.Params.ByName("sid") == "" {
+				if urlParam != "" && urlParam != student.Username {
+					post.Code = 405
+					post.Message = "Parameter Mismatch"
+					c.JSON(http.StatusBadRequest, post)
+				} else if urlParam == "" && student.Username == "" {
 					var lastStudent m.Student
 					db.Limit(1).Order("LENGTH(username) desc, username desc").Find(&lastStudent)
 					id := lastStudent.Username
@@ -164,7 +168,11 @@ func PostAdminParent(c *gin.Context) {
 	} else {
 		if m.IsAuthorized(c, db, aid) {
 			if parent.FirstName != "" && parent.LastName != "" && parent.Email != "" {
-				if parent.Username == "" {
+				if urlParam != "" && urlParam != parent.Username {
+					post.Code = 405
+					post.Message = "Parameter Mismatch"
+					c.JSON(http.StatusBadRequest, post)
+				} else if urlParam == "" && parent.Username == "" {
 					var lastParent m.Parent
 					db.Limit(1).Order("LENGTH(username) desc, username desc").Find(&lastParent)
 					id := lastParent.Username
@@ -214,7 +222,11 @@ func PostAdminTeacher(c *gin.Context) {
 	} else {
 		if m.IsAuthorized(c, db, aid) {
 			if teacher.FirstName != "" && teacher.LastName != "" && teacher.ProfilePic != "" {
-				if teacher.Username == "" {
+				if urlParam != "" && urlParam != teacher.Username {
+					post.Code = 405
+					post.Message = "Parameter Mismatch"
+					c.JSON(http.StatusBadRequest, post)
+				} else if urlParam == "" && teacher.Username == "" {
 					var lastTeacher m.Teacher
 					db.Limit(1).Order("LENGTH(username) desc, username desc").Find(&lastTeacher)
 					id := lastTeacher.Username
