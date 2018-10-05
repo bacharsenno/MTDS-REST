@@ -344,7 +344,7 @@ func PostAppointmentInfo(c *gin.Context) {
 	var appointment m.Appointment
 	c.Bind(&appointment)
 	urlParam := c.Params.ByName("aid")
-	if urlParam != "" && urlParam != string(appointment.AppointmentID) {
+	if urlParam != "" && urlParam != strconv.Itoa(appointment.AppointmentID) {
 		post.Code = 405
 		post.Message = "Parameter Mismatch"
 		c.JSON(http.StatusBadRequest, post)
